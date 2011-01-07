@@ -1,0 +1,399 @@
+<%
+	jQueryURL = "\${appProperties['jquery.url']}"
+	jQueryUIURL = "\${appProperties['jquery.ui.url']}"
+	jQueryUICSSURL = "\${appProperties['jquery.ui.css.url']}"
+	ckEditorURL = "\${appProperties['ckeditor.url']}"
+	ckEditorJQueryURL = "\${appProperties['ckeditor.url']}"
+
+/*
+    if(property.isArray && (property.collectionOf == byte.class || property.collectionOf == Byte))
+        out << renderByteArrayEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.ShortBlob)
+		out << renderByteArrayEditor(domainClass, property)
+*/
+
+//System.out.println("renderEditor.template: ${property.name}")
+//System.out.println("m-1:${property.manyToOne}, 1-1:${property.oneToOne}, 1-m:${property.oneToMany}, m-m:${property.manyToMany}, isOwning:${property.isOwningSide()}")
+//System.out.println("type:${property.type}, dataType:${property.dataType}, collectionOf:${property.collectionOf}, keyOf:${property.keyOf}")
+
+	if(cp && cp.widget && cp.widget.toLowerCase() == "hidden")
+		out << renderHiddenInput(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Blob || property.collectionOf == com.google.appengine.api.datastore.Blob ||
+		property.type == groovyx.gaelyk.graelyk.util.FileHolder || property.collectionOf == groovyx.gaelyk.graelyk.util.FileHolder)
+	{
+		out << renderFileEditor(domainClass, property)
+	}
+    else if(property.type == Boolean.class || property.type == boolean.class || property.collectionOf == Boolean.class || property.collectionOf == boolean.class)
+        out << renderBooleanEditor(domainClass, property)
+    else if(Number.class.isAssignableFrom(property.type) || (property.type.isPrimitive() && property.type != boolean.class) || 
+    	(property.collectionOf != null && Number.class.isAssignableFrom(property.collectionOf)) ||
+    	(property.collectionOf != null && (property.collectionOf.isPrimitive() && property.collectionOf != boolean.class)))
+    {
+        out << renderNumberEditor(domainClass, property)
+    }
+    else if (property.type == String.class || property.collectionOf == String.class)
+        out << renderStringEditor(domainClass, property)
+    else if (property.type == Date.class || property.type == java.sql.Date.class || property.type == java.sql.Time.class || property.type == Calendar.class ||
+			property.collectionOf == Date.class || property.collectionOf == java.sql.Date.class || property.collectionOf == java.sql.Time.class || property.collectionOf == Calendar.class)
+        out << renderDateEditor(domainClass, property)
+    else if (property.type == URL.class || property.collectionOf == URL.class)
+        out << renderStringEditor(domainClass, property)
+    else if (property.isEnum() || property.hasEnum())
+        out << renderEnumEditor(domainClass, property)
+    else if (property.type == TimeZone.class || property.collectionOf == TimeZone.class)
+        out << renderSelectTypeEditor("timeZone", domainClass, property)
+    else if (property.type == Locale.class || property.collectionOf == Locale.class)
+        out << renderLocaleEditor(domainClass, property)
+    else if (property.type == Currency.class || property.collectionOf == Currency.class)
+        out << renderSelectTypeEditor("currency", domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Text)
+		out << renderStringEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Category || property.collectionOf == com.google.appengine.api.datastore.Category)
+		out << renderStringEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Email || property.collectionOf == com.google.appengine.api.datastore.Email)
+		out << renderStringEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.IMHandle || property.collectionOf == com.google.appengine.api.datastore.IMHandle)
+		out << renderStringEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Link || property.collectionOf == com.google.appengine.api.datastore.Link)
+		out << renderStringEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.PhoneNumber || property.collectionOf == com.google.appengine.api.datastore.PhoneNumber)
+		out << renderStringEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.PostalAddress || property.collectionOf == com.google.appengine.api.datastore.PostalAddress)
+		out << renderStringEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Rating || property.collectionOf == com.google.appengine.api.datastore.Rating)
+		out << renderNumberEditor(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.GeoPt)
+		out << renderGeoPtEditor(domainClass, property)
+    else if (property.manyToOne || property.oneToOne)
+        out << renderManyToOne(domainClass, property)
+    else if ((property.oneToMany && !property.bidirectional) || (property.manyToMany && property.isOwningSide()))
+        out << renderManyToMany(domainClass, property)
+    else if (property.oneToMany)
+        out << renderOneToMany(domainClass, property)
+        
+        
+    //This method can be used to uniquely add a CSS file to the head portion of the html document.
+	private addCSS(cssURL)
+	{
+		String link = """<link rel="stylesheet" type="text/css" href="${cssURL}" />"""
+		if(!headerList.contains(link))
+		{
+			headerList << link
+		}
+	}
+	
+    //This method can be used to uniquely add a JS file to the head portion of the html document.
+	private addJS(jsURL)
+	{
+		String script = """<script type="text/javascript" src="${jsURL}"></script>"""
+		if(!headerList.contains(script))
+		{
+			headerList << script
+		}
+	}
+	
+    //This method can be used to uniquely add an html fragment to the head portion of the html document.
+	private addHTML(String html)
+	{
+		if(!headerList.contains(html))
+		{
+			headerList << html
+		}	
+	}
+    
+    private String formatAttributes(attributes)
+    {
+    	StringBuffer sb = new StringBuffer()
+     	attributes.each{k,v->
+    		if(v.class == boolean || v instanceof Boolean)
+    		{
+    			sb << k + ":" + v.toString() + ", "
+    		}
+    		else if(Number.isAssignableFrom(v.class))
+    		{
+    			sb << k + ":" + v.toString() + ", "
+    		}
+    		else
+    		{
+    			sb << k + ':"' + v.toString() + '", '
+    		}
+    	}
+    	return sb.toString()
+    }
+	
+	private String getKeyClass(domainClass, property)
+	{
+		groovyx.gaelyk.graelyk.util.AnnotationUtils.getAnnotationValue(domainClass.class, property.name, groovyx.gaelyk.graelyk.annotation.GDC).getName()
+	}
+
+	private multipleSelect(property)
+	{
+		return (property.isArray || property.isCollection) ? ", multiple:true" : ""
+	}
+
+    private renderBooleanEditor(domainClass, property)
+	{
+        if (!cp) {
+            return "[% g_checkBox(name:\"${property.name}\", value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+        }
+        else {
+            def sb = new StringBuffer("[% g_checkBox(name:\"${property.name}\", ")
+            if (cp.widget) sb << "widget:\"${cp.widget}\", ";
+			sb << formatAttributes(cp.attributes)
+            sb << "value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+            return sb.toString()
+        }
+    }
+
+    private renderDateEditor(domainClass, property)
+	{
+        def precision = (property.type == Date.class || property.type == java.sql.Date.class || property.type == Calendar.class) ? "day" : "minute";
+        if (!cp) {
+            return "[% g_datePicker(name:\"${property.name}\", precision:\"${precision}\", value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+        }
+        else {
+            if (!cp.editable) {
+                return "\${${domainInstance}?.${property.name}?.toString()}"
+            }
+            else {
+                def sb = new StringBuffer("[% g_datePicker(name:\"${property.name}\", ")
+                if (cp.format) sb << "format:\"${cp.format}\", "
+                if (cp.widget) sb << "widget:\"${cp.widget}\", "
+				sb << formatAttributes(cp.attributes)
+                sb << "precision:\"${precision}\", value:${domainInstance}?.${property.name} ${renderNoSelection(property)}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+                return sb.toString()
+            }
+        }
+    }
+
+    private renderEnumEditor(domainClass, property) 
+	{
+		def multi = multipleSelect(property)
+        return "[% g_select(widget:\"${cp?.widget}\", name:\"${property.name}\", from:${property.getDataType().name}?.values(), ${formatAttributes(cp.attributes)} value:${domainInstance}?.${property.name} ${renderNoSelection(property)}${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+    }
+    
+    private renderFileEditor(domainClass, property)
+	{
+        return "<input type=\"file\" id=\"${property.name}\" name=\"${property.name}\" />"
+    }
+    
+    private renderGeoPtEditor(domainClass, property)
+	{
+        def precision = (property.type == Date.class || property.type == java.sql.Date.class || property.type == Calendar.class) ? "day" : "minute";
+        if(cp && cp.widget && cp.widget.toLowerCase() == "map")
+        {
+        	addJS('\\${localizedGoogleMapsURL()}')
+			addJS(jQueryURL)
+        	addJS("/js/GeoPtPicker.js")
+        	addCSS("/css/GeoPtPicker.css")
+            return "[% g_geoPtMapPicker(name:\"${property.name}\", ${formatAttributes(cp.attributes)} value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+        }
+        else
+        {
+            return "[% g_geoPtPicker(name:\"${property.name}\", ${formatAttributes(cp.attributes)} value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+        }
+	}
+	
+	private renderHiddenInput(domainClass, property)
+	{
+		return "[% g_hiddenField(name:\"${property.name}\", value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+	}
+
+    private renderStringEditor(domainClass, property)
+	{
+		if(cp)
+		{
+			if(cp.widget && (cp.widget.toLowerCase() == "iso639-3" || cp.widget.toLowerCase() == "iso639_3" || cp.widget.toLowerCase() == "locale"))
+			{
+				return renderLocaleEditor(domainClass, property)
+			}
+            else if (property.type == com.google.appengine.api.datastore.Text || "textarea" == cp.widget || "ckeditor" == cp.widget || (cp.maxSize > 250 && !cp.password && !cp.inList)) 
+            {
+            	def editor = "[% g_textArea(name:\"${property.name}\", cols:\"40\", rows:\"5\", ${formatAttributes(cp.attributes)} value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+            	if(cp.widget == "ckeditor")
+            	{
+            		if(!cp.attributes){cp.attributes = [:]}
+            		//cp.attributes["class"] = cp.attributes["class"] ? cp.attributes["class"] + " ckeditor" : "ckeditor"
+            		addJS(ckEditorURL)
+            		addJS(ckEditorJQueryURL)
+            		def id = cp.attributes.id ? cp.attributes.id : property.name
+            		editor += """\r\n<script type="text/javascript">jQuery(function() { jQuery('#${id}').ckeditor(function(){/*Callback function*/}, {/*Map of config options*/}); });</script>"""
+            	}
+            	
+                return editor
+            }
+            else {
+                if (cp.inList) {
+                	def multi = multipleSelect(property)
+                	if(!cp.attributes)
+                	{
+                		cp.attributes = [:]
+                	}
+                	if(!cp.attributes.containsKey("valueMessagePrefix"))
+                	{
+                		cp.attributes["valueMessagePrefix"] = "${domainClass.propertyName}.${property?.name}"
+                	}
+                    return "[% g_select(widget:\"${cp?.widget}\", name:\"${property.name}\", from:${domainInstance}.constraints.${property.name}.inList, ${formatAttributes(cp.attributes)} value:${domainInstance}?.${property.name} ${renderNoSelection(property)}${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+                }
+                else if(cp.widget == "country")
+                {
+                	return renderSelectTypeEditor("country", domainClass, property)
+                }
+                else {
+                    def sb = new StringBuffer("[% g_")
+                    cp.password ? sb << "passwordField(" : sb << "textField("
+                    sb << "name:\"${property.name}\", "
+                    if (cp.maxSize) sb << "maxlength:\"${cp.maxSize}\", "
+                    if (!cp.editable) sb << "readonly:\"readonly\", "
+                    sb << formatAttributes(cp.attributes)
+                    sb << "value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+                    return sb.toString()
+                }
+            }
+        }
+        else if(!cp)
+		{
+            return "[% g_textField(name:\"${property.name}\", value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+        }
+    }
+	
+	private renderLocaleEditor(domainClass, property)
+	{
+		if(!cp)
+		{
+			return renderSelectTypeEditor("locale", domainClass, property)
+		}
+		else
+		{
+			if(cp.widget && (cp.widget.toLowerCase() == "iso639-3" || cp.widget.toLowerCase() == "iso639_3"))
+			{
+				def multi = multipleSelect(property)
+				def sb = new StringBuffer("[% g_iso639_3LocaleSelect(name:\"${property.name}\", ")
+				sb << formatAttributes(cp.attributes)
+				sb << "value:${domainInstance}?.${property.name}${multi}) %]"
+				
+				def format = cp.attributes.format
+				if(!format){format = "Table"}
+				addCSS("/css/LanguagePicker${format}.css")
+				addJS(jQueryURL)
+				addJS("/js/LanguagePicker/LanguagePicker.js")
+				
+				return sb.toString()
+			}
+			else
+			{
+				return renderSelectTypeEditor("locale", domainClass, property)
+			}
+		}
+	}
+
+    private renderManyToMany(domainClass, property)
+	{
+        //return "[% g_select name:\"${property.name}\", from:${property.referencedDomainClass.fullName}.query(), multiple:\"yes\", optionKey:\"id\", size:\"5\", value:${domainInstance}?.${property.name}*.getNameOrId() %]"
+		return "[% g_select(widget:\"${cp?.widget}\", ${formatAttributes(cp.attributes)} name:\"${property.name}\", from:${property.referencedPropertyType.getName()}.query(), multiple:\"yes\", optionKey:\"id\", size:\"5\", value:${domainInstance}?.${property.name}*.getNameOrId(), property:${domainInstance}?.propertyMap.${property.name}) %]"
+    }
+
+    private renderManyToOne(domainClass,property)
+	{
+        if (property.association) 
+		{
+            return "[% g_select(widget:\"${cp?.widget}\", ${formatAttributes(cp.attributes)} name:\"${property.name}\", from:${getKeyClass(domainClass, property)}.query(), optionKey:\"id\", value:\"\${${domainInstance}?.${property.name}?.getNameOrId()}\" ${renderNoSelection(property)}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+        }
+    }
+    
+    private renderNoSelection(property)
+	{
+        if (property.optional) {
+            if (property.manyToOne || property.oneToOne) {
+                return ", noSelection:\"['null': '']\""
+            }
+            else {
+                return ", noSelection:\"['': '']\""
+            }
+        }
+        return ""
+    }
+    
+    private renderNumberEditor(domainClass, property)
+    {
+		def multi = multipleSelect(property)
+        if (!cp) {
+            if (property.type == Byte.class)
+			{
+                return "[% g_select(widget:\"${cp?.widget}\", name:\"${property.name}\", from:-128..127, ${formatAttributes(cp.attributes)} value:fieldValue(bean: ${domainInstance}, field: '${property.name}')${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+            }
+			else if(property.type == com.google.appengine.api.datastore.Rating)
+			{
+                return "[% g_select(widget:\"${cp?.widget}\", name:\"${property.name}\", from:0..100, ${formatAttributes(cp.attributes)} value:(${domainInstance}?.${property.name} as int)${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+			}
+            else
+			{
+                return "[% g_textField(name:\"${property.name}\", ${formatAttributes(cp.attributes)} value:fieldValue(bean: ${domainInstance}, field: '${property.name}')${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+            }
+        }
+        else
+        {
+			if(property.type == com.google.appengine.api.datastore.Rating)
+			{
+				def from
+				if(cp.range){from = "${cp.range.from}..${cp.range.to}"}
+				else if(cp.inList){from = "${domainInstance}.constraints.${property.name}.inList"}
+				else{from = "0..100"}
+                return "[% g_select(widget:\"${cp?.widget}\", name:\"${property.name}\", from:${from}, ${formatAttributes(cp.attributes)} value:(${domainInstance}?.${property.name} as int)${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+			}
+            else if(cp.range)
+            {
+                return "[% g_select(widget:\"${cp?.widget}\", name:\"${property.name}\", from:${cp.range.from}..${cp.range.to}, ${formatAttributes(cp.attributes)} value:fieldValue(bean: ${domainInstance}, field: '${property.name}') ${renderNoSelection(property)}${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+            }
+            else if (cp.inList)
+            {
+                //return "[% g_select(name:\"${property.name}\", from:${domainInstance}.constraints.${property.name}.inList, value:fieldValue(bean: ${domainInstance}, field: '${property.name}'), valueMessagePrefix:\"${domainClass.propertyName}.${property?.name}\" ${renderNoSelection(property)}${multi}) %]"
+            	if(!cp.attributes)
+            	{
+            		cp.attributes = [:]
+            	}
+            	if(!cp.attributes.containsKey("valueMessagePrefix"))
+            	{
+            		cp.attributes["valueMessagePrefix"] = "${domainClass.propertyName}.${property?.name}"
+            	}
+                return "[% g_select(widget:\"${cp?.widget}\", name:\"${property.name}\", from:${domainInstance}.constraints.${property.name}.inList, ${formatAttributes(cp.attributes)} value:${domainInstance}?.${property.name} ${renderNoSelection(property)}${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+            }            
+            else
+			{
+                return "[% g_textField(name:\"${property.name}\", ${formatAttributes(cp.attributes)} value:fieldValue(bean: ${domainInstance}, field: '${property.name}')${multi}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+			}
+		}
+	}
+
+    private renderOneToMany(domainClass, property)
+	{
+        def sw = new StringWriter()
+        def pw = new PrintWriter(sw)
+        pw.println()
+        pw.println "<ul>"
+        pw.println "[% for(${property.name[0]} in ${domainInstance}?.${property.name}) { %]"
+        pw.println "    <li>[% g_link(controller:\"${property.relatedClassPropertyName}\", action:\"show\", id:\"\${${property.name[0]}.id}\", property:${domainInstance}?.propertyMap.${property.name}){${property.name[0]}?.encodeAs(\"HTML\")} %]</li>"
+        pw.println "[% } %]"
+        pw.println "</ul>"
+        pw.println "[% g_link(controller:\"${property.relatedClassPropertyName}\", ${formatAttributes(cp.attributes)} action:\"create\", params:\"['${domainClass.propertyName}.id': ${domainInstance}?.id]\", property:${domainInstance}?.propertyMap.${property.name}){message(code: 'default.add.label', args: [message(code: '${property.referencedDomainClass.propertyName}.label', default: '${property.referencedDomainClass.shortName}')])} %]"
+        return sw.toString()
+    }
+
+    private renderSelectTypeEditor(type, domainClass,property)
+	{
+        if(!cp)
+        {
+            return "[% g_${type}Select(name:\"${property.name}\", ${formatAttributes(cp.attributes)} value:${domainInstance}?.${property.name}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+        }
+        else
+        {
+            def sb = new StringBuffer("[% g_${type}Select(name:\"${property.name}\", ")
+            if (cp.widget) sb << "widget:\"${cp.widget}\", ";
+            sb << formatAttributes(cp.attributes)
+            sb << "value:${domainInstance}?.${property.name} ${renderNoSelection(property)}, property:${domainInstance}?.propertyMap.${property.name}) %]"
+            
+            return sb.toString()
+        }
+    }
+
+%>
