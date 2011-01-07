@@ -1,0 +1,23 @@
+target("run-app":"Run the app using the App Engine development server")
+{
+	checkGraelyk()
+	//try to run dev_appserver command on windows
+	try
+	{
+		ant.exec(dir:".", executable:"cmd"){
+			arg(line:"/c dev_appserver war")
+		}
+		//"dev_appserver.cmd war".execute()
+	}
+	catch(Exception e)
+	{
+		//try to run dev_appserver command on Unix-lyk
+		try
+		{
+			ant.exec(dir:".", executable:"/bin/sh"){
+				arg(line:'-c "dev_appserver war"')
+			}
+		}
+		catch(Exception e2){}
+	}
+}

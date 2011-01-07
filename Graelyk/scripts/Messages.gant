@@ -1,0 +1,16 @@
+binding.setVariable("starsAndSpace", {
+	println("")
+	println("****************")
+	println("")
+})
+
+
+
+binding.setVariable("confirmInput", {message, property->
+	ant.input(message:message, addproperty:property, validargs:"Y,y,N,n")
+	if(binding.getVariable(property).toUpperCase() == "Y")
+	{
+		return true
+	}
+	return false
+})

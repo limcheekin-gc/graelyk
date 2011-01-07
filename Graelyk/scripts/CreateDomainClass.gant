@@ -1,0 +1,106 @@
+import groovyx.gaelyk.graelyk.util.GraelykArtifactName
+
+target("create-domain-class":"Creates a new domain class")
+{
+	checkGraelyk()
+	
+	def type = "DomainTemplate"
+	
+	starsAndSpace()
+	ant.input(message:"Domain package & class (e.g. org.myorg.MyDomain):", addproperty:"domainClassFullName")
+	def artifact = new GraelykArtifactName(domainClassFullName)
+
+	//Get different parts of the class, package, file path, etc.
+    className = artifact.domainClassName
+    propertyName = artifact.domainClassPropertyName
+	fileName = artifact.domainClassFileName
+	packageName = artifact.domainClassPackageName
+    artifactFile = "${baseDir}/${artifact.domainClassPath}/${fileName}"
+
+
+	//Prompt to overwrite if the file exists
+	def overwrite = false
+    if (new File(artifactFile).exists())
+	{
+		starsAndSpace()
+        if(!confirmInput("${type} ${fileName} already exists. Overwrite? [y/n]","${artifactFile}.overwrite"))
+		{
+            return
+        }
+		overwrite = true
+    }
+
+
+	//Let the developer choose a Full GraelykDomainClass, or just a domain class extending groovyx.gaelyk.obgaektify.Obgaektifiable with no other methods or properties specified.
+	starsAndSpace()
+	ant.input(message:"Choose the domain's type [Full/Lite]. [Full] is a full GraelykDomainClass.", addproperty:"domainType", validargs:"Full,Lite")
+	if(domainType == "Full"){domainType = "graelyk"}
+	else{domainType = "lite"}
+	
+
+	//Let the developer choose to use a Long id or a String id.
+	starsAndSpace()
+	ant.input(message:"Choose the domain's id type [String/Long]", addproperty:"obgaektifyIdType", validargs:"String,Long")
+
+
+    templateFile = new File("${graelykHome}/templates/${templateDir}/${domainType}-${type}.groovy")
+
+	ant.copy(file:templateFile, tofile:artifactFile)
+	
+    ant.replace(file: artifactFile, token: "@artifact.name@", value: "${className}")
+	ant.replace(file: artifactFile, token: "@artifact.idType@", value: "${obgaektifyIdType}")
+    if(packageName)
+	{
+        ant.replace(file: artifactFile, token: "@artifact.package@", value: "package ${packageName}\n\n")
+    }
+    else
+	{
+        ant.replace(file: artifactFile, token: "@artifact.package@", value: "")
+    }
+	
+	
+	//Register the domain class in obgaektify.groovy (for persisting to the DataStore)
+	if(!overwrite)
+	{
+		def obgaektifyFile = "${baseDir}/war/WEB-INF/obgaektify.groovy"
+		def obgaektifyText = new File(obgaektifyFile).newReader("UTF-8").text
+		new File(obgaektifyFile).withWriter("UTF-8"){writer->
+			writer << obgaektifyText
+			writer << "\r\nregister ${domainClassFullName}"
+		}
+	}
+	
+	def domainClassArtifactFile = artifactFile
+	//Prompt to create the controller too
+	starsAndSpace()
+	if(confirmInput("Create a controller now? [y/n]","${artifactFile}.createController"))
+	{
+		binding.setVariable("createControllerArtifact", artifact)
+		binding.setVariable("createControllerDomainType", domainType)
+		"create-controller"()
+	}
+	
+	//Prompt to open the domain class in the default editor. This works on Windows anyways.
+	if(confirmInput("Open the domain class for editing? [y/n]", "${domainClassArtifactFile}.editDomainClass"))
+	{
+		//try to open the file on windows
+		try
+		{
+			ant.exec(dir:".", executable:"cmd"){
+				arg(line:"/c ${domainClassArtifactFile}")
+			}
+			//"dev_appserver.cmd war".execute()
+		}
+		catch(Exception e)
+		{
+			//try to run dev_appserver command on Unix-lyk
+			try
+			{
+				ant.exec(dir:".", executable:"/bin/sh"){
+					arg(line:'-c  ${domainClassArtifactFile}')
+				}
+			}
+			catch(Exception e2){}
+		}
+	}
+}

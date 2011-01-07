@@ -1,0 +1,6 @@
+setDefaultTarget("generate-all")
+
+target("generate-all":"Generates views and controller for a domain class")
+{
+	println("Generate views and controller....")
+}

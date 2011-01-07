@@ -1,0 +1,129 @@
+import groovy.text.GStringTemplateEngine
+import groovyx.gaelyk.graelyk.util.GraelykArtifactName
+
+target("create-controller":"Creates a new controller")
+{
+	checkGraelyk()
+
+	def type = "ControllerTemplate"
+	
+	def artifact
+	def domainType
+	
+	//Look for the domain class & controller info that may be passed in from "create-domain-class"
+	try
+	{
+	if(createControllerArtifact)
+	{
+		artifact = createControllerArtifact
+		domainType = createControllerDomainType
+	}
+	}
+	catch(Exception e)
+	{
+		//Prompt for the domain class this will be a controller for
+		starsAndSpace()
+		ant.input(message:"Enter the domain package & class your controller relates to (e.g. org.myorg.MyDomain):", addproperty:"domainClassFullName")
+		artifact = new GraelykArtifactName(domainClassFullName)
+	}
+
+	//Get different parts of the class, package, file path, etc.
+	domainClassFullName = artifact.domainClassFullName
+    className = artifact.domainClassName
+    propertyName = artifact.domainClassPropertyName
+	
+	fileName = artifact.classFileName
+	//packageName = artifact.classPackageName
+	artifactFile = "${baseDir}/${artifact.classPath}/${fileName}"
+	
+	//If domainType was not specified from the CreateDomainClass script, find it here by introspecting the domain class code:
+	if(!domainType)
+	{
+		domainType = checkDomainType("${baseDir}/${artifact.domainClassPath}/${artifact.domainClassFileName}")
+	}
+
+	//Prompt to overwrite the file
+	def overwrite = false
+    if (new File(artifactFile).exists())
+	{
+		starsAndSpace()
+        if(!confirmInput("${type} ${fileName} already exists. Overwrite? [y/n]","${artifactFile}.overwrite"))
+		{
+            return
+        }
+		overwrite = true
+    }
+
+	//Create the controller file from a template
+	def binding = [domainClassFullName:artifact.domainClassFullName,
+		domainClassPropertyName:artifact.domainClassPropertyName, 
+		domainClassName:artifact.domainClassName, 
+		//packageName:artifact.classPackageName, 
+		propertyName:artifact.classPropertyName]
+	def templateFile = new File("${graelykHome}/templates/${templateDir}/${domainType}-${type}.groovy")
+	def engine = new GStringTemplateEngine()
+	
+	(new File(artifact.classPath)).mkdirs()
+	
+	new File("${artifact.classPath}/${artifact.classFileName}").withWriter("UTF-8"){writer->
+		writer << engine.createTemplate(templateFile).make(binding).toString()
+	}
+	
+	//Add a default url route rule to routes.groovy (Only when the file is first created, not when overwriting it.)
+	if(!overwrite)
+	{
+		def routesFile = "${baseDir}/war/WEB-INF/routes.groovy"
+		def routesText = new File(routesFile).newReader("UTF-8").text
+		new File(routesFile).withWriter("UTF-8"){writer->
+			writer << routesText
+			writer << "\r\n\r\n//Suggested route for ${artifact.classFileName}:\r\n" + suggestControllerRoute(artifact) + "\r\n"
+		}
+	}
+	
+	//Copy the messages/internationalization/i18n to graelyk-i18n/DomainName (Only when the file is first created, not when overwriting it.)
+	if(!overwrite)
+	{
+		def unpackDir = "${baseDir}/war/graelyk-i18n/${artifact.domainClassName}"
+		ant.mkdir(dir:unpackDir)
+		ant.unzip(src:"${graelykHome}/templates/${templateDir}/graelyk-i18n-template.zip", dest:unpackDir)
+	}
+}
+
+target("suggest-route":"Suggests a route for the routes.groovy URL re-routing file")
+{
+	starsAndSpace()
+	ant.input(message:"Enter the domain package & class your controller relates to (e.g. org.myorg.MyDomain):", addproperty:"domainClassFullName")
+	def artifact = new GraelykArtifactName(domainClassFullName)
+
+	starsAndSpace()
+	println("A suggested route to put in /war/WEB-INF/routes.groovy for ${artifact.classFullName} is: ")
+	println("")
+	println(suggestControllerRoute(artifact))
+	starsAndSpace()
+}
+
+def String suggestControllerRoute(GraelykArtifactName artifact)
+{
+	//Three different routes are provided:
+	// /controller/@action/@id
+	// /controller/@action
+	// /controller
+	return """all "/${artifact.domainClassName.toLowerCase()}/@action/@id", forward:"${artifact.classPath - "war"}/${artifact.classFileName}?action=@action&id=@id"\r\n""" +
+		"""all "/${artifact.domainClassName.toLowerCase()}/@action", forward:"${artifact.classPath - "war"}/${artifact.classFileName}?action=@action"\r\n""" +
+		"""all "/${artifact.domainClassName.toLowerCase()}", forward:"${artifact.classPath - "war"}/${artifact.classFileName}"\r\n"""
+}
+
+//Determine if a given domain class file is a full Graelyk(Long/String)IdDomainClass or just an Obgaektifiable(Long/String)Id class.
+//Used for determing what template file to choose.
+def String checkDomainType(artifactFile)
+{
+	def fileText = new File(artifactFile).text
+	if(fileText =~ /extends[\s\r\n]+Graelyk(Long|String)IdDomainClass/)
+	{
+		domainType = "graelyk"
+	}
+	else
+	{
+		domainType = "lite"
+	}
+}

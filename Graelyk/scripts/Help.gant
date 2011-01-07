@@ -1,0 +1,25 @@
+setDefaultTarget("help")
+
+target(help:"Help")
+{
+	def helpList = [
+		[name:"create-app", desc:"Creates a Graelyk application for the given name"],
+		[name:"create-controller", desc:"Creates a new controller"],
+		[name:"create-domain-class", desc:"Creates a new domain class"],
+		[name:"generate-all", desc:"Generates a CRUD interface (controller + views) for a domain class"],
+		[name:"generate-controller", desc:"Generates the CRUD controller for a specified domain class"],
+		[name:"generate-views", desc:"Generates the CRUD views for a specified domain class"],
+		[name:"help", desc:"Prints out the help for each script"]
+	]
+	
+	println("")
+	println("Usage (optionals marked with *)")
+	println("graelyk [target] [arguments]*")
+	println("")
+	println("Available Targets (type graelyk help 'target-name' for more info):")
+	for(target in helpList)
+	{
+		println("graelyk ${target.name} -- ${target.desc}")
+	}
+	println("")
+}
