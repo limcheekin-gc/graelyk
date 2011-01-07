@@ -1,0 +1,1051 @@
+/* Copyright 2004-2005 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//Original package org.codehaus.groovy.grails.orm.hibernate;
+package groovyx.gaelyk.graelyk.domain
+
+import groovyx.gaelyk.graelyk.annotation.GDC
+import groovyx.gaelyk.graelyk.annotation.Contains
+import groovyx.gaelyk.graelyk.exception.GraelykDomainException
+import groovyx.gaelyk.graelyk.util.GraelykClassUtils
+import groovyx.gaelyk.graelyk.util.GraelykNameUtils
+import groovyx.gaelyk.graelyk.util.AnnotationUtils
+import com.googlecode.objectify.annotation.NotSaved
+import com.googlecode.objectify.annotation.Parent
+import com.googlecode.objectify.Key
+//import com.google.appengine.api.datastore.Key
+import javax.persistence.Id
+import javax.persistence.Transient
+import javax.persistence.Embedded
+import java.beans.PropertyDescriptor
+import org.apache.commons.lang.StringUtils
+import java.beans.PropertyDescriptor
+import org.springframework.beans.BeanUtils
+
+
+public class GraelykDomainClassProperty
+{
+	public static String IDENTITY = "id";
+	public static String VERSION = "version";
+	public static String TRANSIENT = "transients";
+	public static String CONSTRAINTS = "constraints";
+	public static String EVANESCENT = "evanescent";
+	public static String RELATES_TO_MANY = "relatesToMany";
+	public static String META_CLASS = "metaClass";
+	public static String CLASS = "class";
+	public static String MAPPING_STRATEGY = "mapWith";
+	public static String MAPPED_BY = "mappedBy";    
+	public static String BELONGS_TO = "belongsTo";
+	public static String HAS_MANY = "hasMany";
+	public static String HAS_ONE = "hasOne";
+	public static String FETCH_MODE = "fetchMode";
+	public static String DATE_CREATED = "dateCreated";
+	public static String MAPPING = "mapping";
+	public static String NAMED_QUERIES = "namedQueries";
+	public static String LAST_UPDATED = "lastUpdated";
+	public static String SORT = "sort";
+	public static String EMBEDDED = "embedded";
+	public static int FETCH_EAGER = 1;
+	public static int FETCH_LAZY = 0;
+
+    private GraelykDomainClass domainClass;
+
+    private String name;
+    private String naturalName;
+    private Class type;
+	private boolean excluded;
+	private boolean persistent;
+    private boolean identity;
+
+    private boolean oneToOne = false
+    private boolean oneToMany = false
+    private boolean manyToOne = false
+    private boolean manyToMany = false
+
+    private boolean association = false;
+	private boolean hasOne = false;
+    private boolean bidirectional = false;
+	private boolean circular = false;
+	private boolean owningSide = false;
+    
+    private Class relatedClassType; //type of the domain class that this property refers to (same as either type, collectionOf, or keyOf)
+	private String relatedClassPropertyName; //"property name" for the domain class. e.g. if the domain class is MyDomainClass the property name is "mydomainclass"
+	private String relatedClassReferencingProperty; //name of the property in the related domain class that references this domain class
+
+	private boolean optional;
+    private String columnName;
+	private boolean inherited;
+	private int fetchMode = FETCH_LAZY;
+	
+	//private String referencedPropertyName;
+	//private Class referencedPropertyType;
+	//private GraelykDomainClass referencedDomainClass;
+	private GraelykDomainClassProperty otherSide;
+    private boolean embedded;
+    private GraelykDomainClass component;
+    private boolean basicCollectionType;
+	
+    /*
+    private boolean oneToX = false
+    private boolean manyToX = false
+	private boolean isCollection = false;
+	private boolean isArray = false;
+	private boolean hasKey = false;
+	private Class collectionOf = null;
+	private Class keyOf = null;
+	private String relatedClassControllerName; //store the default controller name for the domain class referenced by this Key property
+	*/
+	
+	private Closure transformOnReceive = null
+	private Closure transformOnDisplay = null
+	
+	
+	//These getters & setters are for properties in relationshipInfo
+    //I would like to have used the @Delegate notation here but it throws a runtime error about creation of duplicate method name & signature. So I'm defining wrapper getters and setters.
+    private GraelykDomainClassRelationshipInfo relationshipInfo
+	def getIsCollection(){return relationshipInfo.isCollection}
+	def getIsArray(){return relationshipInfo.isArray}
+	def getHasKey(){return relationshipInfo.hasKey}
+	def getXToOne(){return relationshipInfo.xToOne}
+	def getXToMany(){return relationshipInfo.xToMany}
+	def getCollectionOf(){return relationshipInfo.collectionOf}
+	def getKeyOf(){return relationshipInfo.keyOf}
+	
+	def setIsCollection(b){relationshipInfo.isCollection = b}
+	def setIsArray(b){relationshipInfo.isArray = b}
+	def setHasKey(b){relationshipInfo.hasKey = b}
+	def setXToOne(b){relationshipInfo.xToOne = b}
+	def setXToMany(b){relationshipInfo.xToMany = b}
+	def setCollectionOf(Class type){relationshipInfo.collectionOf = type}
+	def setKeyOf(Class type){relationshipInfo.keyOf = type}
+
+    public GraelykDomainClassProperty(GraelykDomainClass domainClass, String propertyName, Class type)
+	{
+        this.domainClass = domainClass;
+        this.name = propertyName;
+		this.type = type;
+		this.columnName = this.name;
+        this.naturalName = GraelykNameUtils.getNaturalName(propertyName);
+        
+    	relationshipInfo = new GraelykDomainClassRelationshipInfo(this.domainClass.class, this.name, this.type)
+        
+		establishExcluded()
+		establishPersistent()
+		establishEmbedded()
+		establishOptional()
+		
+		/*
+		establishArrayCollection()
+		establishHasKey()
+		*/
+		
+		establishRelationship()
+		establishAssociation()
+		
+		establishTransforms()
+    }
+
+	
+	public void establishExcluded()
+	{
+		if(domainClass.excludedProperties.contains(name))
+		{
+			this.excluded = true
+		}
+		else
+		{
+			this.excluded = false
+		}
+	}
+
+	
+	public void establishPersistent()
+	{
+		def p = true
+		if(this.name == "id" || this.name == "version")
+		{
+			//id and version are always present & persisted
+			p = true
+		}
+		else if(this.excluded)
+		{
+			p = false
+		}
+		else if(AnnotationUtils.hasAnnotation(domainClass.getClass(), name, com.googlecode.objectify.annotation.NotSaved) ||
+			AnnotationUtils.hasAnnotation(domainClass.getClass(), name, javax.persistence.Transient))
+		{
+			p = false
+		}
+		this.persistent = p
+	}
+	
+	
+	
+	public void establishOptional()
+	{
+		def optionals = GraelykClassUtils.getStaticPropertyValue(domainClass.class, "optionals")
+		if(optionals && optionals instanceof List && optionals.contains(this.name))
+		{
+			setOptional(true)
+		}
+		setOptional(false)
+	}
+	
+	/*
+	public void establishArrayCollection()
+	{
+		if(Collection.class.isAssignableFrom(this.type) || Map.class.isAssignableFrom(this.type))
+		{
+			isCollection = true
+		}
+		else if(this.type.isArray())
+		{
+			isArray = true
+		}
+		
+		if(isArray)
+		{
+			collectionOf = this.type.getComponentType()
+		}
+		else if(isCollection)
+		{
+			collectionOf = AnnotationUtils.getAnnotationValue(this.domainClass.class, this.name, Contains)
+		}
+	}
+	
+	
+	public void establishHasKey()
+	{
+		if(Key.class.isAssignableFrom(this.type))
+		{
+			hasKey = true
+			keyOf = AnnotationUtils.getAnnotationValue(this.domainClass.class, this.name, GDC)
+		}
+		else if((isArray || isCollection) && Key.class.isAssignableFrom(collectionOf))
+		{
+			hasKey = true
+			keyOf = AnnotationUtils.getAnnotationValue(this.domainClass.class, this.name, GDC)
+		}
+		
+		if(hasKey)
+		{
+			relatedClassControllerName = GraelykNameUtils.getPropertyName(keyOf)
+		}
+	}
+	*/
+
+    /**
+     * Calculates the relationship type based other types referenced
+     *
+     */
+    private void establishRelationship()
+	{
+		if(!this.isPersistent()) return;
+		
+    	relatedClassType = null
+    	if(hasKey)
+    	{
+    		relatedClassType = keyOf
+    	}
+    	else if(isCollection || isArray)
+    	{
+    		relatedClassType = collectionOf
+    	}
+    	else
+    	{
+    		relatedClassType = type
+    	}
+    	
+    	if(relatedClassType)
+    	{
+    		relatedClassPropertyName = GraelykNameUtils.getPropertyName(relatedClassType)
+    	}
+    	
+    	//Look for a all properties in the relatedClassType that have a type/collectionOf/keyOf == this domain class
+    	/*
+    	def propertyList = GraelykClassUtils.getPropertiesWithValueType(relatedClassType, this.domainClass.class)
+    	
+    	if(propertyList.size() == 0)
+    	{
+        	//There are no properties in the related class that map back to this class
+    		owningSide = true
+    		bidirectional = false
+    		circular = false
+    		
+    		if(xToMany)
+    		{
+    			oneToMany = true
+    		}
+    		else if(xToOne)
+    		{
+    			oneToOne = true
+    		}
+    	}
+    	else if(propertyList.size() == 1)
+    	{
+
+    	}
+    	else if(propertyList.size() > 1)
+    	{
+    		
+    	}
+    	*/
+    	
+		// establish if the property is a one-to-many
+		// if it is a Set and there are relationships defined
+		// and it is defined as persistent
+    	/*
+		if(this.isArray || this.isCollection)
+		{
+			manyToX = true
+			establishRelationshipForCollection();
+		}
+		// otherwise if the type is a domain class establish relationship
+		else if(GraelykDomainClass.isAssignableFrom(this.type) && this.isPersistent())
+		{
+			establishDomainClassRelationship();
+		}
+		// otherwise if the type is Key<GraelykDomainClass> establish relationship
+		else if(Key.isAssignableFrom(this.type) && this.isPersistent())
+		{
+			def keyAnnotation = AnnotationUtils.getAnnotationValue(this.domainClass.getClazz(), this.name, GDC)
+			if(keyAnnotation && GraelykDomainClass.isAssignableFrom(keyAnnotation))
+			{
+				establishDomainClassRelationshipForKey();
+			}
+		}
+		*/
+		
+		setAssociation(isOneToMany() ||
+                isOneToOne() ||
+                isManyToOne() ||
+                isManyToMany() ||
+                isEmbedded()
+		)
+	}
+	
+	
+	
+    /**
+     * Establishes a relationship for a java.util.Set
+     *
+     * @param property The collection property
+     */
+    private void  establishRelationshipForCollection()
+	{
+		
+        // is it a relationship
+        //Class relatedClassType = getRelatedClassType( this.getName() );
+		Class relatedClassType = AnnotationUtils.getAnnotationValue(this.domainClass.getClazz(), this.name, GDC)
+
+
+        if(relatedClassType != null)
+        {
+			relatedClassPropertyName = GraelykNameUtils.getPropertyNameRepresentation(relatedClassType)
+			
+            // set the referenced type in the this
+            this.setReferencedPropertyType(relatedClassType);
+
+            // if the related type is a domain class
+            // then figure out what kind of relationship it is
+            //if(DomainClassArtefactHandler.isDomainClass(relatedClassType)) {
+
+
+                // check the relationship defined in the referenced type
+                // if it is also a Set/domain class etc.
+                Map relatedClassRelationships = GraelykDomainConfigurationUtil.getAssociationMap(relatedClassType);
+                Class relatedClassPropertyType = null;
+
+                // First check whether there is an explicit relationship
+                // mapping for this this (as provided by "mappedBy").
+                String mappingProperty = (String)this.domainClass.mappedByMap.get(this.getName());
+                if(!StringUtils.isBlank(mappingProperty)) {
+                    // First find the specified this on the related
+                    // class, if it exists.
+                    PropertyDescriptor pd = findProperty(GraelykClassUtils.getPropertiesOfType(relatedClassType, this.domainClass.getClazz()), mappingProperty);
+
+                    // If a this of the required type does not exist,
+                    // search for any collection properties on the related
+                    // class.
+                    if(pd == null) pd = findProperty(GraelykClassUtils.getPropertiesAssignableToType(relatedClassType, Collection.class), mappingProperty);
+
+                    // We've run out of options. The given "mappedBy"
+                    // setting is invalid.
+                    if(pd == null)
+					{
+                        throw new GraelykDomainException("Non-existent mapping this ["+mappingProperty+"] specified for this ["+this.getName()+"] in class ["+getClazz()+"]");
+					}
+
+                    // Tie the properties together.
+                    relatedClassPropertyType = pd.getPropertyType();
+                    this.setReferencedPropertyName(pd.getName());
+                }
+                else {
+                    // if the related type has a relationships map it may be a many-to-many
+                    // figure out if there is a many-to-many relationship defined
+//TODO:
+/*
+                    if(	isRelationshipManyToMany(this, relatedClassType, relatedClassRelationships)) {
+                        String relatedClassPropertyName = null;
+                        Map relatedClassMappedBy = GraelykDomainConfigurationUtil.getMappedByMap(relatedClassType);
+                        // retrieve the relationship this
+                        for (Object o : relatedClassRelationships.keySet()) {
+                            String currentKey = (String) o;
+                            String mappedByProperty = (String) relatedClassMappedBy.get(currentKey);
+                            if(mappedByProperty != null && !mappedByProperty.equals(this.getName())) continue;
+                            Class currentClass = (Class) relatedClassRelationships.get(currentKey);
+                            if (currentClass.isAssignableFrom(this.domainClass.getClazz())) {
+                                relatedClassPropertyName = currentKey;
+                                break;
+                            }
+                        }
+
+                        // if there is one defined get the type
+                        if(relatedClassPropertyName != null) {
+                            relatedClassPropertyType = GraelykClassUtils.getPropertyType( relatedClassType, relatedClassPropertyName);
+                        }
+                    }
+*/
+					
+                    // otherwise figure out if there is a one-to-many relationship by retrieving any properties that are of the related type
+                    // if there is more than one this then (for the moment) ignore the relationship
+                    if(relatedClassPropertyType == null) {
+                        PropertyDescriptor[] descriptors = GraelykClassUtils.getPropertiesOfType(relatedClassType, this.domainClass.getClazz());
+
+                        if(descriptors.length == 1) {
+                            relatedClassPropertyType = descriptors[0].getPropertyType();
+                            this.setReferencedPropertyName(descriptors[0].getName());
+                        }
+                        else if(descriptors.length > 1) {
+                            // try now to use the class name by convention
+                            String classPropertyName = getPropertyName();
+                            PropertyDescriptor pd = findProperty(descriptors, classPropertyName);
+                            if(pd == null) {
+                                throw new GraelykDomainException("Property ["+this.getName()+"] in class ["+getClazz()+"] is a bidirectional one-to-many with two possible properties on the inverse side. "+
+                                        "Either name one of the properties on other side of the relationship ["+classPropertyName+"] or use the 'mappedBy' static to define the this " +
+                                        "that the relationship is mapped with. Example: static mappedBy = ["+this.getName()+":'myprop']");
+                            }
+                            relatedClassPropertyType = pd.getPropertyType();
+                            this.setReferencedPropertyName(pd.getName());
+                        }
+                    }
+                }
+
+                establishRelationshipForSetToType(this, relatedClassPropertyType);
+                // if its a many-to-many figure out the owning side of the relationship
+                if(this.isManyToMany()) {
+                	establishOwnerOfManyToMany(this, relatedClassType);
+                }
+            //}
+            // otherwise set it to not persistent as you can't persist
+            // relationships to non-domain classes
+            //else {
+            //    this.setBasicCollectionType(true);
+            //}
+        }
+//TODO: reinstate this somehow? removed because it prevents String[] or List<String> from being used
+/*
+        else if(!Map.class.isAssignableFrom(this.getType())) {
+            // no relationship defined for set.
+            // set not persistent
+            this.setPersistent(false);
+        }
+*/
+    }
+
+	
+	/**
+     * Establishes whether the relationship is a bi-directional or uni-directional one-to-many
+     * and applies the appropriate settings to the specified property
+     *
+     * @param property The property to apply settings to
+     * @param relatedClassPropertyType The related type
+     */
+    private void establishRelationshipForSetToType(GraelykDomainClassProperty property, Class relatedClassPropertyType) {
+
+        if(relatedClassPropertyType == null)
+		{
+            // uni-directional one-to-many
+            property.setOneToMany(true);
+            property.setBidirectional(false);
+        }
+        else if( Collection.class.isAssignableFrom(relatedClassPropertyType) || Map.class.isAssignableFrom(relatedClassPropertyType)  )
+		{
+            // many-to-many
+            property.setManyToMany(true);
+            property.setBidirectional(true);
+        }
+        else if(DomainClassArtefactHandler.isDomainClass(relatedClassPropertyType))
+		{
+            // bi-directional one-to-many
+            property.setOneToMany( true );
+            property.setBidirectional( true );
+        }
+    }
+	
+	
+	
+    private void establishDomainClassRelationshipForKey()
+	{
+		Class propType = AnnotationUtils.getAnnotationValue(this.domainClass.getClazz(), this.name, GDC)
+        // establish relationship to type
+        Map relatedClassRelationships = GraelykDomainConfigurationUtil.getAssociationMap(propType);
+        Map mappedBy = GraelykDomainConfigurationUtil.getMappedByMap(propType);
+        Class relatedClassPropertyType = null;
+
+        // if there is a relationships map use that to find out
+        // whether it is mapped to a Set
+        if(relatedClassRelationships != null && !relatedClassRelationships.isEmpty() )
+		{
+        	relatedClassPropertyName = findOneToManyThatMatchesType(relatedClassRelationships);
+            //PropertyDescriptor[] descriptors = GraelykClassUtils.getPropertiesOfType(this.domainClass.getClazz(), propType);
+			PropertyDescriptor[] descriptors = getPropertiesAnnotatedWithType(this.domainClass.getClazz(), propType)
+
+            // if there is only one property on many-to-one side of the relationship then
+            // try to establish if it is bidirectional
+            if(descriptors.length == 1 && isNotMappedToDifferentProperty(relatedClassPropertyName, mappedBy))
+			{
+                if(!StringUtils.isBlank(relatedClassPropertyName))
+				{
+                    this.setReferencedPropertyName(relatedClassPropertyName);
+                    // get the type of the property
+                    relatedClassPropertyType = GraelykClassUtils.getPropertyType(propType, relatedClassPropertyName );
+                }
+            }
+            // if there is more than one property on the many-to-one side then we need to either
+            // find out if there is a mappedBy property or whether a convention is used to decide
+            // on the mapping property
+            else if(descriptors.length > 1)
+			{
+            	if(mappedBy.containsValue(this.getName()))
+				{
+                   for (Object o : mappedBy.keySet())
+					{
+                        String mappedByPropertyName = (String) o;
+                        if (this.getName().equals(mappedBy.get(mappedByPropertyName)))
+						{
+                            Class mappedByRelatedType = (Class) relatedClassRelationships.get(mappedByPropertyName);
+                            if (mappedByRelatedType != null && propType.isAssignableFrom(mappedByRelatedType))
+							{
+                                relatedClassPropertyType = GraelykClassUtils.getPropertyType(propType, mappedByPropertyName);
+							}
+                        }
+                    }
+            	}
+            	else
+				{
+            		String classNameAsProperty = GraelykClassUtils.getPropertyName(propType);
+            		if(this.getName().equals(classNameAsProperty) && !mappedBy.containsKey(relatedClassPropertyName)) {
+            			relatedClassPropertyType = GraelykClassUtils.getPropertyType( propType, relatedClassPropertyName );
+            		}
+            	}
+            }
+        }
+        // otherwise retrieve all the properties of the type from the associated class
+        if(relatedClassPropertyType == null)
+		{
+            //PropertyDescriptor[] descriptors = GraelykClassUtils.getPropertiesOfType(propType, this.domainClass.getClazz());
+			PropertyDescriptor[] descriptors = getPropertiesAnnotatedWithType(this.domainClass.getClazz(), propType)
+
+            // if there is only one then the association is established
+            if(descriptors.length == 1)
+			{
+                relatedClassPropertyType = descriptors[0].getPropertyType();
+            }
+        }
+
+
+        //	establish relationship based on this type
+        establishDomainClassRelationshipToType(relatedClassPropertyType );
+    }
+	
+	
+	private static PropertyDescriptor[] getPropertiesAnnotatedWithType(Class clazz, Class propType)
+	{
+        if(clazz == null || propType == null) 
+		{
+            return new PropertyDescriptor[0];
+        }
+
+        Set<PropertyDescriptor> properties = new HashSet<PropertyDescriptor>();
+        try
+		{
+            for(PropertyDescriptor descriptor in BeanUtils.getPropertyDescriptors(clazz)) 
+			{
+                //Class<?> currentPropertyType = descriptor.getPropertyType();
+				Class annotatedType = AnnotationUtils.getAnnotationValue(clazz, descriptor.getName(), GDC)
+				if(annotatedType != null && annotatedType.equals(propType) || annotatedType.isAssignableFrom(propType))
+				{
+					properties.add(descriptor);
+                }
+            }
+
+        } 
+		catch (Exception e) 
+		{
+            // if there are any errors in instantiating just return null for the moment
+            return new PropertyDescriptor[0];
+        }
+        return properties.toArray(new PropertyDescriptor[properties.size()]);
+    }
+
+
+    private void establishDomainClassRelationship()
+	{
+        Class propType = this.getType();
+
+        // establish relationship to type
+        Map relatedClassRelationships = GraelykDomainConfigurationUtil.getAssociationMap(propType);
+        Map mappedBy = GraelykDomainConfigurationUtil.getMappedByMap(propType);
+
+        Class relatedClassPropertyType = null;
+
+        // if there is a relationships map use that to find out
+        // whether it is mapped to a Set
+        if(	relatedClassRelationships != null && !relatedClassRelationships.isEmpty() )
+		{
+        	relatedClassPropertyName = findOneToManyThatMatchesType(relatedClassRelationships);
+            PropertyDescriptor[] descriptors = GraelykClassUtils.getPropertiesOfType(this.domainClass.getClazz(), this.getType());
+
+            // if there is only one property on many-to-one side of the relationship then
+            // try to establish if it is bidirectional
+            if(descriptors.length == 1 && isNotMappedToDifferentProperty(relatedClassPropertyName, mappedBy))
+			{
+                if(!StringUtils.isBlank(relatedClassPropertyName))
+				{
+                    this.setReferencedPropertyName(relatedClassPropertyName);
+                    // get the type of the property
+                    relatedClassPropertyType = GraelykClassUtils.getPropertyType(propType, relatedClassPropertyName );
+                }
+            }
+            // if there is more than one property on the many-to-one side then we need to either
+            // find out if there is a mappedBy property or whether a convention is used to decide
+            // on the mapping property
+            else if(descriptors.length > 1)
+			{
+            	if(mappedBy.containsValue(this.getName()))
+				{
+                    for (Object o : mappedBy.keySet())
+					{
+                        String mappedByPropertyName = (String) o;
+                        if (this.getName().equals(mappedBy.get(mappedByPropertyName)))
+						{
+                            Class mappedByRelatedType = (Class) relatedClassRelationships.get(mappedByPropertyName);
+                            if (mappedByRelatedType != null && propType.isAssignableFrom(mappedByRelatedType))
+							{
+                                relatedClassPropertyType = GraelykClassUtils.getPropertyType(propType, mappedByPropertyName);
+							}
+                        }
+                    }
+            	}
+            	else {
+            		String classNameAsProperty = GraelykClassUtils.getPropertyName(propType);
+            		if(this.getName().equals(classNameAsProperty) && !mappedBy.containsKey(relatedClassPropertyName)) {
+            			relatedClassPropertyType = GraelykClassUtils.getPropertyType( propType, relatedClassPropertyName );
+            		}
+            	}
+            }
+        }
+        // otherwise retrieve all the properties of the type from the associated class
+        if(relatedClassPropertyType == null)
+		{
+            PropertyDescriptor[] descriptors = GraelykClassUtils.getPropertiesOfType(propType, this.domainClass.getClazz());
+
+            // if there is only one then the association is established
+            if(descriptors.length == 1)
+			{
+                relatedClassPropertyType = descriptors[0].getPropertyType();
+            }
+        }
+
+
+        //	establish relationship based on this type
+        establishDomainClassRelationshipToType(relatedClassPropertyType );
+    }	
+	
+    private void establishDomainClassRelationshipToType(Class relatedClassPropertyType)
+	{
+        // uni-directional one-to-one
+
+        if(relatedClassPropertyType == null) 
+		{
+            if(domainClass.hasOneMap.containsKey(this.getName())) 
+			{
+                this.setHasOne(true);
+            }
+            this.setOneToOne(true);
+            this.setBidirectional(false);
+        }
+        // bi-directional many-to-one
+        else if(Collection.class.isAssignableFrom(relatedClassPropertyType) || Map.class.isAssignableFrom(relatedClassPropertyType)) 
+		{
+            this.setManyToOne(true);
+            this.setBidirectional(true);
+        }
+        // bi-directional one-to-one
+        else if(DomainClassArtefactHandler.isDomainClass(relatedClassPropertyType)) 
+		{
+            if(domainClass.hasOneMap.containsKey(this.getName())) 
+			{
+                this.setHasOne(true);
+            }
+            
+            this.setOneToOne(true);
+            if(!(this.domainClass.getClazz()).equals(relatedClassPropertyType))
+			{
+                this.setBidirectional(true);
+			}
+        }
+    }
+	
+	
+    private boolean isNotMappedToDifferentProperty(String relatedClassPropertyName, Map mappedBy)
+	{
+        String mappedByForRelation = (String)mappedBy.get(relatedClassPropertyName);
+        if(mappedByForRelation == null) return true;
+        else if(!this.getName().equals(mappedByForRelation)) return false;
+        return true;
+    }
+	
+	
+    private String findOneToManyThatMatchesType(Map relatedClassRelationships)
+	{
+		String relatedClassPropertyName = null;
+
+        for(currentKey in relatedClassRelationships.keySet())
+		{
+			Class currentClass = (Class)relatedClassRelationships.get(currentKey);
+            if(this.domainClass.getClazz().getName().equals(currentClass.getName())) 
+			{
+                relatedClassPropertyName = currentKey;
+                break;
+            }
+        }
+		return relatedClassPropertyName;
+	}
+	
+	
+	public void establishAssociation()
+	{
+        this.setAssociation(isOneToMany() ||
+                isOneToOne() ||
+                isManyToOne() ||
+                isManyToMany() ||
+                isEmbedded()
+		)
+	}
+
+
+	
+	public void establishTransforms()
+	{
+		try
+		{
+			transformOnReceive = domainClass.@transformOnReceive?."$name"
+		}
+		catch(groovy.lang.MissingPropertyException mpe){System.out.println("mpe")}
+		catch(groovy.lang.MissingFieldException mfe){System.out.println("mfe")}
+		try
+		{
+			transformOnDisplay = domainClass.@transformOnDisplay?."$name"
+		}
+		catch(groovy.lang.MissingPropertyException mpe){System.out.println("mpe")}
+		catch(groovy.lang.MissingFieldException mfe){System.out.println("mfe")}
+	}
+	
+	
+	
+
+    public String getName()
+	{
+        return this.name;
+    }
+    
+    //Return the type of the actual data, regardless of if it is stored in an Array, Collection, behind a Key
+    public Class getDataType()
+    {
+    	if(hasKey)
+    	{
+    		return keyOf
+    	}
+    	else if(isCollection || isArray)
+    	{
+    		return collectionOf
+    	}
+    	else
+    	{
+    		return type
+    	}
+    }
+
+    public Class getType()
+	{
+        return this.type;
+    }
+
+    public void setType(Class type)
+	{
+        this.type = type;
+    }
+
+    public String getTypePropertyName()
+	{
+        return GraelykNameUtils.getPropertyNameRepresentation(this.type);
+    }
+
+    public GraelykDomainClass getDomainClass()
+	{
+        return this.domainClass;
+    }
+	
+	
+	public boolean isExcluded()
+	{
+		return this.excluded
+	}
+
+    public boolean isPersistent()
+	{
+        return this.persistent;
+    }
+
+    public String getNaturalName()
+	{
+        return this.naturalName;
+    }
+
+    public void setReferencedDomainClass(GraelykDomainClass referencedGraelykDomainClass)
+	{
+        this.referencedDomainClass =   referencedGraelykDomainClass;
+    }
+
+    public void setOtherSide(GraelykDomainClassProperty referencedProperty)
+	{
+        this.otherSide = referencedProperty;
+    }
+
+    public GraelykDomainClassProperty getOtherSide()
+	{
+        return this.otherSide;
+    }
+
+    public boolean isIdentity() {
+        return identity;
+    }
+
+    public void establishIdentity()
+	{
+		//identity field is always called "id"
+		this.identity = (this.name == "id")
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public void setOptional(boolean optional) {
+        this.optional = optional;
+    }
+
+	
+
+    public boolean isOneToOne()
+	{
+        return oneToOne;
+    }
+
+    public void setOneToOne(boolean oneToOne)
+	{
+        this.oneToOne = oneToOne;
+    }
+
+    public boolean isManyToOne()
+	{
+        return manyToOne;
+    }
+
+    public void setManyToOne(boolean manyToOne)
+	{
+        this.manyToOne = manyToOne;
+    }
+
+    public boolean isAssociation()
+	{
+		return this.association
+    }
+	
+	public void setAssociation(boolean b)
+	{
+		this.association = b
+	}
+
+    public boolean isEnum()
+	{
+        return Enum.isAssignableFrom(getType());
+    }
+    
+    public boolean hasEnum()
+    {
+    	if(hasKey && Enum.isAssignableFrom(keyOf))
+    	{
+    		return true
+    	}
+    	else if((isCollection || isArray) && Enum.isAssignableFrom(collectionOf))
+    	{
+    		return true
+    	}
+    	return false
+    }
+
+    public boolean isOneToMany()
+	{
+        return oneToMany;
+    }
+
+    public void setOneToMany(boolean oneToMany)
+	{
+        this.oneToMany = oneToMany;
+    }
+
+    public boolean isManyToMany() {
+        return manyToMany;
+    }
+
+    public void setManyToMany(boolean manyToMany)
+	{
+        this.manyToMany = manyToMany;
+    }
+
+    public boolean isBidirectional()
+	{
+        return bidirectional;
+    }
+
+    public void setBidirectional(boolean bidirectional)
+	{
+        this.bidirectional = bidirectional;
+    }
+
+    public String getFieldName() {
+        return getName().toUpperCase();
+    }
+
+    public GraelykDomainClass getReferencedDomainClass() {
+        return this.referencedDomainClass;
+    }
+
+    public void setRelatedClassType(Class relatedType) {
+        this.relatedClassType = relatedType;
+    }
+	
+	public String getReferencedPropertyName()
+	{
+		return this.referencedPropertyName
+	}
+	
+	public void setReferencedPropertyName(String name)
+	{
+		this.referencedPropertyName = name
+	}
+	
+	public Class getReferencedPropertyType()
+	{
+		return this.referencedPropertyType
+	}
+	
+	public void setReferencedPropertyType(Class type)
+	{
+		this.referencedPropertyType = type
+	}
+
+	public boolean isInherited()
+	{
+		return false;
+	}
+
+	public int getFetchMode() {
+		return FETCH_LAZY;
+	}
+
+	public boolean isOwningSide() {
+		return this.owningSide;
+	}
+
+    public void setOwningSide(boolean b)
+	{
+		this.owningSide = b;
+    }
+
+	public boolean isCircular()
+	{
+		return this.circular;
+	}
+	
+	public void setCircular(boolean b)
+	{
+		this.circular = b
+	}	
+	
+	public void setEmbedded(boolean b)
+	{
+		this.embedded = b
+	}
+
+    public boolean isEmbedded() {
+        return this.embedded;
+    }
+	
+	private void establishEmbedded()
+	{
+		def embedded = GraelykClassUtils.getStaticPropertyValue(domainClass.class, "embedded")
+		if(embedded && embedded instanceof List && embedded.contains(this.name))
+		{
+			this.setEmbedded(true)
+		}
+		else
+		{
+			this.setEmbedded(false)
+		}
+	}
+
+    public GraelykDomainClass getComponent()
+	{
+        return null;
+    }
+
+    public boolean isBasicCollectionType()
+	{
+        return false;
+    }
+
+    public boolean isHasOne()
+	{
+        return this.hasOne;
+    }
+	
+	public void setHasOne(boolean b)
+	{
+		this.hasOne = b
+	}
+
+	/*
+    public void setColumnName(String columnName) {
+        this.columnName = columnName;
+    }
+	*/
+
+    public String getColumnName() {
+        return columnName;
+    }
+}
