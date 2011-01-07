@@ -1,0 +1,118 @@
+//includeTargets << gant.targets.Clean
+
+def gantHome = System.getenv("GANT_HOME")
+
+def version = "0.1"
+def srcDir = "src"
+def classesDir = "classes"
+def distributablesDir = "lib"
+def distributedJarName = "graelyk-${version}.jar"
+def distributedJarPath = "${distributablesDir}/${distributedJarName}"
+
+def gaelykTemplateDir = "templates/gaelyk-app-template"
+def gaelykTemplateZip = "templates/default/gaelyk-app-template.zip"
+
+def graelykTemplateDir = "templates/graelyk-app-template"
+def graelykTemplateZip = "templates/default/graelyk-app-template.zip"
+
+def graelykI18nTemplateDir = "templates/graelyk-i18n-template"
+def graelykI18nTemplateZip = "templates/default/graelyk-i18n-template.zip"
+
+
+def gaelykJQueryTemplateDir = "templates/gaelyk-app-template"
+def gaelykJQueryTemplateZip = "templates/jquery/gaelyk-app-template.zip"
+
+def graelykJQueryTemplateDir = "templates/graelyk-app-template"
+def graelykJQueryTemplateZip = "templates/jquery/graelyk-app-template.zip"
+
+def graelykJQueryI18nTemplateDir = "templates/graelyk-i18n-template"
+def graelykJQueryI18nTemplateZip = "templates/jquery/graelyk-i18n-template.zip"
+
+def apacheLib = "lib/commons-codec-1.3.jar;" +
+				"lib/commons-lang-2.4.jar;" +
+				"lib/commons-validator-1.3.1.jar;" +
+				"lib/commons-logging.jar"
+
+def springLib = "lib/org.springframework.beans-3.0.0.RELEASE.jar;" +
+				"lib/org.springframework.context-3.0.0.RELEASE.jar;" +
+				"lib/org.springframework.core-3.0.0.RELEASE.jar"
+				
+def grailsLib = "" //"lib/grails-core-1.3.0.RC2.jar"
+def gaeLib = 		"lib/appengine-api-1.0-sdk-1.3.5.jar"
+def gaelykLib = 	"lib/gaelyk-0.4.4.jar"
+def objectifyLib = 	"lib/objectify-2.2.jar"
+def obgaektifyLib = "lib/obgaektify-0.0.jar"
+
+ant.taskdef (  name : 'groovyc' , classname : 'org.codehaus.groovy.ant.Groovyc' )
+
+
+//cleanDirectory << ["${classesDir}/**/*", "${distributablesDir}/*.jar"]
+
+target(clean:"Delete files")
+{
+	ant.delete(file:distributedJarPath)
+	ant.delete(dir:classesDir)
+}
+
+
+target(initDirs:"Create all the required directories")
+{
+	def dirs = [classesDir, distributablesDir]
+	dirs.each() { ant.mkdir(dir: it) }
+}
+
+
+target(compile:"Compile classes")
+{
+	depends(initDirs)
+	//Todo: enable joint compilation
+	groovyc(srcdir:srcDir, destdir:classesDir, classpath:"${classesDir};${apacheLib};${springLib};${grailsLib};${gaeLib};${gaelykLib};${objectifyLib};${obgaektifyLib};lib/javax.persistence.jar")
+	{
+		javac()
+	}
+	ant.copy(file:"${srcDir}/groovyx/gaelyk/graelyk/util/HtmlCharacterEntityReferences.properties", tofile:"${classesDir}/groovyx/gaelyk/graelyk/util/HtmlCharacterEntityReferences.properties")
+	ant.copy(file:"${srcDir}/groovyx/gaelyk/graelyk/validation/DefaultErrorMessages.properties", tofile:"${classesDir}/groovyx/gaelyk/graelyk/validation/DefaultErrorMessages.properties")
+	ant.copy(file:"${srcDir}/groovyx/gaelyk/graelyk/validation/DefaultErrorMessages_en_US.properties", tofile:"${classesDir}/groovyx/gaelyk/graelyk/validation/DefaultErrorMessages_en_US.properties")
+}
+
+
+target(jar: 'Jar up the server-side code')
+{
+	depends(compile)
+	ant.jar(basedir: classesDir, destfile: distributedJarPath, excludes: '**/*Test*')
+	ant.copy(file: distributedJarPath, tofile:"templates/graelyk-app-template/war/WEB-INF/lib/${distributedJarName}")
+}
+
+target(zipTemplate: "Zip up the graelyk app template & i18n template")
+{
+	depends(jar)
+		
+	ant.delete(file:gaelykTemplateZip)
+	ant.zip(basedir:gaelykTemplateDir, destfile:gaelykTemplateZip)
+	
+	ant.delete(file:graelykTemplateZip)
+	ant.zip(basedir:graelykTemplateDir, destfile:graelykTemplateZip)
+	
+	ant.delete(file:graelykI18nTemplateZip)
+	ant.zip(basedir:graelykI18nTemplateDir, destfile:graelykI18nTemplateZip)
+	
+	ant.delete(file:gaelykJQueryTemplateZip)
+	ant.zip(basedir:gaelykJQueryTemplateDir, destfile:gaelykJQueryTemplateZip)
+	
+	ant.delete(file:graelykJQueryTemplateZip)
+	ant.zip(basedir:graelykJQueryTemplateDir, destfile:graelykJQueryTemplateZip)
+	
+	ant.delete(file:graelykJQueryI18nTemplateZip)
+	ant.zip(basedir:graelykJQueryI18nTemplateDir, destfile:graelykJQueryI18nTemplateZip)
+
+}
+
+target(default:"Default target")
+{
+	depends(zipTemplate)
+	
+	//Todo: helper for my development process - remove later
+	ant.copy(file: distributedJarPath, tofile:"C:/Dev/GaelykDev/Graelyk/Graffiti/war/WEB-INF/lib/${distributedJarName}")
+	ant.copy(file: distributedJarPath, tofile:"C:/Dev/GaelykDev/CommentHow/war/WEB-INF/lib/${distributedJarName}")
+	ant.copy(file: distributedJarPath, tofile:"C:/Dev/GaelykDev/SIL-Congo/war/WEB-INF/lib/${distributedJarName}")
+}
