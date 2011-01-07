@@ -1,0 +1,152 @@
+import groovy.text.GStringTemplateEngine
+import groovy.text.SimpleTemplateEngine
+import org.codehaus.groovy.control.CompilerConfiguration
+
+import groovyx.gaelyk.obgaektify.ObgaektifiableLongId
+import groovyx.gaelyk.obgaektify.ObgaektifiableStringId
+import groovyx.gaelyk.graelyk.validation.ConstrainedProperty
+import groovyx.gaelyk.graelyk.util.GraelykArtifactName
+import groovyx.gaelyk.graelyk.util.GraelykNameUtils
+import groovyx.gaelyk.graelyk.util.FileHolder
+import com.google.appengine.api.datastore.Blob
+
+// a closure that uses the type to render the appropriate editor
+def renderEditor = {property, headerList ->
+	def theDomainClass = property.domainClass
+	def cp = theDomainClass.constrainedProperties[property.name]
+	def engine = new SimpleTemplateEngine()
+
+	// create template once for performance
+	def templateText = (new File("${graelykHome}/templates/${templateDir}/renderEditor.template")).text
+	renderEditorTemplate = engine.createTemplate(templateText)
+
+	def instanceProperty = GraelykArtifactName.extractPropertyName(theDomainClass.class.name) + GraelykArtifactName.instanceSuffix
+	def theBinding = [property: property, domainClass: theDomainClass, cp: cp, domainInstance:instanceProperty, headerList: headerList]
+	return renderEditorTemplate.make(theBinding).toString()
+}
+
+def renderDisplay = {property, headerList ->
+	def theDomainClass = property.domainClass
+	def cp = theDomainClass.constrainedProperties[property.name]
+	def engine = new SimpleTemplateEngine()
+
+	// create template once for performance
+	def templateText = (new File("${graelykHome}/templates/${templateDir}/renderDisplay.template")).text
+	renderDisplayTemplate = engine.createTemplate(templateText)
+
+	def instanceProperty = GraelykArtifactName.extractPropertyName(theDomainClass.class.name) + GraelykArtifactName.instanceSuffix
+	def theBinding = [property: property, domainClass: theDomainClass, cp: cp, domainInstance:instanceProperty, headerList: headerList]
+	return renderDisplayTemplate.make(theBinding).toString()
+}
+
+
+target("create-views":"Creates the views for the domain class")
+{
+	checkGraelyk()
+
+	def type = "GraelykViewsTemplate"
+	
+	//Prompt for the domain class this will be the view for
+	starsAndSpace()
+	ant.input(message:"Enter the domain package & class your views relate to (e.g. org.myorg.MyDomain):", addproperty:"domainClassFullName")
+	def artifact = new GraelykArtifactName(domainClassFullName)
+	
+	//Find the domain type here by introspecting the domain class code:
+	def domainType = checkDomainType("${baseDir}/${artifact.domainClassPath}/${artifact.domainClassFileName}")
+
+	//Create each view
+	def views = ["create", "list", "show", "edit"]
+	views.each{view->
+		println("Create $view view...")
+		fileName = "${view}.gtpl"
+		artifactFile = "${baseDir}/${artifact.viewPath}/${fileName}"
+		
+		//Prompt to overwrite the file
+		def overwrite = false
+		if (new File(artifactFile).exists())
+		{
+			starsAndSpace()
+			if(!confirmInput("${type} ${fileName} already exists. Overwrite? [y/n]","${artifactFile}.overwrite"))
+			{
+				return
+			}
+			overwrite = true
+		}
+
+		
+		//*******************************************
+		//Create the view file from a template
+		//*******************************************
+		
+		//Create the renderEditor/renderDisplay for use in the template.
+		
+		//Add classes to the classpath:
+		def loader = Thread.currentThread().getContextClassLoader()
+		
+		def urls = []
+		def classdir = new File("${baseDir}/war/WEB-INF/classes")
+		urls << classdir.toURI().toURL()
+		classdir.eachDirRecurse{dir->
+				urls << dir.toURI().toURL()
+		}
+		
+		URLClassLoader ucl = new URLClassLoader(urls as URL[], loader)
+		def conf = new CompilerConfiguration()
+		def gcl = new GroovyClassLoader(ucl, conf);
+		
+		Object domainClass
+		//domainClass = gcl.loadClass(artifact.domainClassFullName, true).newInstance().init()
+		domainClass = gcl.parseClass(new File("${baseDir}/${artifact.domainClassPath}/${artifact.domainClassFileName}")).newInstance()
+		
+		//If there is a Byte array or Blob or FileHolder, we assume there will be a file upload. Setting multiPart to true will make the HTML form's enctype be multipart/form-data
+		def multiPart = false
+		if(domainType == "graelyk")
+		{
+			domainClass.init()
+			if(domainClass.properties.find {it.dataType == ([] as Byte[]).class || it.dataType == ([] as byte[]).class || it.dataType == Blob.class || it.dataType == FileHolder.class})
+			{
+				multiPart = true
+			}
+		}
+
+		def headerList = [] //This list will be passed in to the renderEditor closure. It allows the renderEditor.template to uniquely include CSS/JS/Html-fragments that will be inserted into the HTML page's <head> section.
+		
+		def binding = [domainClassFullName:artifact.domainClassFullName,
+			domainClassPropertyName:artifact.domainClassPropertyName, 
+			domainInstance:artifact.domainClassPropertyName,
+			domainClassName:artifact.domainClassName, 
+			propertyName:artifact.classPropertyName,
+			domainClass:domainClass,
+			multiPart:multiPart,
+			comparator:(domainType == "graelyk" ? new groovyx.gaelyk.graelyk.domain.DomainClassPropertyComparator(domainClass) : null),
+			renderEditor:renderEditor,
+			renderDisplay:renderDisplay,
+			headerList:headerList]
+
+		def templateFile = new File("${graelykHome}/templates/${templateDir}/${domainType}-${view}.gtpl")
+		def engine = new GStringTemplateEngine(this.class.classLoader)
+		
+		(new File(artifact.viewPath)).mkdirs()
+
+		String viewText = engine.createTemplate(templateFile).make(binding).toString()
+		viewText = viewText.replaceAll(/\[%/, "<%")
+		viewText = viewText.replaceAll(/%\]/, "%>")
+		viewText = viewText.replaceAll(/@HeadIncludes@/, headerList.join("\r\n")) //Insert JS/CSS/Html-fragments into the HTML page's <head> section. These were set in the renderEditor/rednerDisplay closure/renderEditor.template/renderDisplay.template
+		new File("${artifactFile}").withWriter("UTF-8"){writer-> writer << viewText}
+	}
+}
+
+//Determine if a given domain class file is a full Graelyk(Long/String)IdDomainClass or just an Obgaektifiable(Long/String)Id class.
+//Used for determing what template file to choose.
+def String checkDomainType(artifactFile)
+{
+	def fileText = new File(artifactFile).text
+	if(fileText =~ /extends[\s\r\n]+Graelyk(Long|String)IdDomainClass/)
+	{
+		domainType = "graelyk"
+	}
+	else
+	{
+		domainType = "lite"
+	}
+}

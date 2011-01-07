@@ -1,0 +1,130 @@
+if(getBinding().variables.containsKey("_read_config_called")) return
+_read_config_called = true
+
+target(checkGraelyk:"Check this is a Graelyk project by looking for the graelyk.properties file")
+{
+	if(!(new File("${baseDir}/war/WEB-INF/graelyk.properties")).exists())
+	{
+		starsAndSpace()
+		println("This does not seem to be a Graelyk project! Change directories to the Graelyk app's root directory, or create a new Graelyk app by typing: graelyk create-app")
+		starsAndSpace()
+		System.exit(1)
+	}
+}
+
+target(readConfig:"Read the graelyk.properties file")
+{
+	depends(checkGraelyk)
+	def propMap = readPropertiesFile("${baseDir}/war/WEB-INF/graelyk.properties", "UTF-8")
+	propMap.each{key, value->
+		binding.setVariable(key, value)
+	}
+}
+
+public Map readPropertiesFile(String filename, String inputEncoding="UTF-8")
+{
+	def map = [:]
+	
+	def file = new File(filename)
+			
+	if(file.exists())
+	{
+		try
+		{
+			FileInputStream fis = new FileInputStream(file);
+			InputStreamReader isr = new InputStreamReader(fis, inputEncoding);
+			BufferedReader inReader = new BufferedReader(isr);
+			
+			boolean firstLine = true;
+			boolean multiLine = false;
+			String multiLineKey = "";
+			String line = "";
+			
+			//Read data in from file
+			while(inReader.ready())
+			{
+				line = inReader.readLine();
+
+				//ignore UTF-8 byte-order mark on first line if it is present
+				if(firstLine && inputEncoding.equals("UTF-8") && line.indexOf("\ufeff") == 0)
+				{
+					line = line.substring(1, line.length());
+				}
+				
+				//ignore comments. Comments specified by # as first character (when not already processing a multi-line property)
+				if(!multiLine && line.indexOf("#") == 0)
+				{
+					continue;
+				}
+				
+				if(multiLine)
+				{
+					if(line.indexOf("\"\"\"") >= 0)
+					{
+						//if line contains """, truncate before """, add that to the current multiLineKey's entry, and terminate the multiLine
+						int quotes = line.indexOf("\"\"\"");
+						line = line.substring(0, quotes);
+						map.put(multiLineKey, map.get(multiLineKey) + line);
+						multiLine = false;
+						multiLineKey = "";
+					}
+					else
+					{
+						//add the current line to the current mutliLineKey's entry, and continue
+						map.put(multiLineKey, map.get(multiLineKey) + line + "\n");
+					}
+				}
+				else
+				{
+					if(line.trim().equals(""))
+					{
+						continue;
+					}
+					int equal = line.indexOf("=");
+					if(equal < 0)
+					{
+						//no equal sign. treat it as a key with a value of ""
+						map.put(line.trim(), "");
+					}
+					else
+					{
+						String key = line.substring(0, equal);
+						String value = line.substring(equal+1, line.length());
+						if(value.matches("^\\s*\"\"\".*"))
+						{
+							//start of multi-line string
+							int quotes = value.indexOf("\"\"\"");
+							value = value.substring(quotes+3, value.length());
+							quotes = value.indexOf("\"\"\"");
+							if(quotes >= 0)
+							{
+								//multi-line string ends on same line
+								value = value.substring(0, quotes);
+								map.put(key, value);
+							}
+							else
+							{
+								//multi-line string must end on some other line
+								multiLine = true;
+								multiLineKey = key;
+								map.put(key, value + "\n");
+							}
+						}
+						else
+						{
+							//single-line property
+							map.put(key, value);
+						}
+					}
+				}
+				
+				firstLine = false;
+			}
+			inReader.close();
+			isr.close();
+			fis.close();
+		}
+		catch(Exception e){System.out.println(e.toString());}
+	}
+	return map
+}

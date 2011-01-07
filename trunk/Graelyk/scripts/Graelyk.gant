@@ -1,0 +1,39 @@
+//def graelykHome = System.getenv("GRAELYK_HOME")
+binding.setVariable("graelykHome", System.getenv("GRAELYK_HOME"))
+binding.setVariable("baseDir", System.getProperty("user.dir"))
+binding.setVariable("templateDir", "default")
+
+Closure graelykScript = {name ->
+	def potentialScript = new File("${graelykHome}/scripts/${name}.gant")
+	potentialScript = potentialScript.exists() ? potentialScript : new File("${graelykHome}/scripts/${name}_.gant")
+	if(potentialScript.exists())
+	{
+		return potentialScript
+	}
+	else
+	{
+		try
+		{
+			return classLoader.loadClass("${name}_")
+		}
+		catch (e)
+		{
+			return classLoader.loadClass(name)
+		}
+	}
+}
+graelykScript.setDelegate(this)
+binding.setVariable("graelykScript", graelykScript)
+
+includeTargets << graelykScript("BuildApp")
+includeTargets << graelykScript("CreateApp")
+includeTargets << graelykScript("CreateController")
+includeTargets << graelykScript("CreateDomainClass")
+includeTargets << graelykScript("CreateViews")
+includeTargets << graelykScript("Help")
+includeTargets << graelykScript("Messages")
+includeTargets << graelykScript("ReadConfig")
+includeTargets << graelykScript("RunApp")
+
+
+

@@ -1,0 +1,55 @@
+setDefaultTarget("create-app")
+
+target("create-app":"Creates a new Graelyk application")
+{
+	println("")
+	ant.input(message:"App name?", addproperty:"appName")
+	appName = appName.replaceAll(/[\/\\\:\*\?"<>\|]/, "_") //Change invalid filename characters to underscore
+	ant.mkdir(dir:appName)
+	unpackTemplate()
+	createConfig()
+	
+	if((new File(appName)).exists())
+	{
+		starsAndSpace()
+		println("Your app has been created! Before using another Graelyk command, please type: ")
+		println("")
+		println("cd ${appName}")
+		starsAndSpace()
+	}
+}
+
+target("unpackTemplate":"Copies the Graelyk template from its zip file")
+{
+	ant.unzip(src:"${graelykHome}/templates/${templateDir}/gaelyk-app-template.zip", dest:"${baseDir}/${appName}")
+	ant.unzip(src:"${graelykHome}/templates/${templateDir}/graelyk-app-template.zip", dest:"${baseDir}/${appName}")
+}
+
+target("createConfig":"Creates the Graelyk config file")
+{
+	new File("${baseDir}/${appName}/war/WEB-INF/graelyk.properties").withWriter("UTF-8"){writer->
+		writer << "appName=${appName}\r\n"
+		writer << "appVersion=0.1\r\n"
+		writer << "appURL=http://www.my-server-name.com\r\n"
+		writer << "appLocales=da,de,es,fr,it,ja,nl,pt_BR,pt_PT,ru,th,zh_CN\r\n"
+		writer << "appLocaleSeparator=,\r\n"
+		writer << "appDefaultLocales=en,es,fr\r\n"
+		writer << "appDefaultNumberLocale=en_US\r\n"
+		writer << "appDefaultDateLocale=en_US\r\n"
+		writer << "appDefaultCurrencyLocale=en_US\r\n"
+		writer << "graelyk.userLocale.cookie=userLocale\r\n"
+		writer << "graelyk.userLocale.query=userLocale\r\n"
+		writer << "graelyk.userLocale.cookieQuerySeparator=&\r\n"
+		writer << "defaultDateFormat=yyyy-MM-dd HH:mm:ss.S\r\n"
+		writer << "graelyk.taglyk.datePicker.default.precision=minute\r\n"
+		writer << "graelyk.download.datastore.url=/downloadDatastoreFile.groovy\r\n"
+		writer << "graelyk.download.blobstore.url=/downloadBlobstoreFile.groovy\r\n"
+		writer << "#You should change the salt value\r\n"
+		writer << "graelyk.security.userid.salt=graelyk\r\n"
+		writer << "jquery.url=/js/jquery-1.4.4.min.js\r\n"
+		writer << "jquery.ui.url=/js/jquery-ui-1.8.7.custom.min.js\r\n"
+		writer << "jquery.ui.css.url=/css/ui-lightness/jquery-ui-1.8.7.custom.css\r\n"
+		writer << "ckeditor.url=/ckeditor/ckeditor.js\r\n"
+		writer << "ckeditor.jquery.url=/ckeditor/adapters/jquery.js\r\n"
+	}
+}
