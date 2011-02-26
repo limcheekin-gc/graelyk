@@ -1,0 +1,179 @@
+/*
+
+	Nonzero1.0 by nodethirtythree design
+	http://www.nodethirtythree.com
+	missing in a maze
+
+*/
+
+/* Basic Stuff */
+
+body
+{
+background-color: #fff;
+color: #585858;
+}
+
+h1,h2,h3,h4,h5,h6
+{
+color: #184366;
+}
+
+img
+{
+border-color: #e1e1e1;
+}
+
+a
+{
+color: #F16C00;
+}
+
+/* Header */
+
+#header
+{
+height:122px;
+background: #1e517c url('../images/blue/n1.gif') repeat-x;
+}
+
+/* Logo */
+
+#logo h1
+{
+color: #fff;
+}
+
+#logo h2
+{
+color: #D2DCE5;
+}
+
+/* TopText */
+#topText h2
+{
+color: #D2DCE5;
+}
+
+/* Menu */
+
+#menu li > form
+{
+background: #fff url('../images/blue/n4.gif') repeat-x;
+border-color: #fff;
+color: #616161;
+}
+
+#menu li > a, #menu li > span
+{
+background: #fff url('../images/blue/n4.gif') repeat-x;
+border-color: #fff;
+color: #616161;
+}
+
+#menu li > a.active
+{
+background: #FF790B url('../images/blue/n3.gif') repeat-x;
+color: #fff;
+border-color: #DB7623;
+}
+
+#menu li > a:hover
+{
+background: #FF790B url('../images/blue/n3.gif') repeat-x;
+color: #fff;
+border-color: #DB7623;
+}
+
+/* Submenu */
+#submenu
+{
+background: #fff url('../images/blue/n2.gif') 0px 0px repeat-x;
+}
+
+#submenu li > form
+{
+border-color: #fff;
+color: #616161;
+}
+
+#submenu li > a, #submenu li > span
+{
+border-color: #fff;
+color: #616161;
+}
+
+#submenu li > a.active, #submenu li > span.active
+{
+background: #FF790B url('../images/blue/n3.gif') 0px -12px repeat-x;
+color: #fff;
+border-color: #DB7623;
+}
+
+#submenu li > a:hover
+{
+background: #FF790B url('../images/blue/n3.gif') 0px -12px repeat-x;
+color: #fff;
+border-color: #DB7623;
+}
+
+
+/* Main */
+
+#main
+{
+background-color: #fff;
+}
+
+#main_inner h3,h4
+{
+border-bottom-color: #E1E1E1;
+}
+
+#main_inner .post ul.post_info li.date
+{
+background-image: url('../images/blue/n5.gif');
+}
+
+#main_inner .post ul.post_info li.comments
+{
+background-image: url('../images/blue/n6.gif');
+}
+
+
+/* Search */
+
+input.button
+{
+background: #FF790B url('../images/blue/n3.gif') repeat-x;
+color: #fff;
+border-color: #DB7623;
+}
+
+input.text
+{
+border-color: #F1F1F1;
+}
+
+/* LAYOUT - COLUMNS */
+
+	/* Left columns */	
+	.columnLeft
+	{
+		border-right-color: #E1E1E1;
+	}
+	
+	/* Right columns */	
+	.columnRight
+	{
+		border-left-color: #E1E1E1;
+	}
+
+/* Footer */
+
+#footer
+{
+border-top-color: #E1E1E1;
+background-color: #1e517c;
+color: #fff;
+}

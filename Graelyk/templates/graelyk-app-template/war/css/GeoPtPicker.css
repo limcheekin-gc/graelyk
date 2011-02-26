@@ -1,0 +1,32 @@
+table.geoPtPickerArea {
+	width: 420px;
+}
+
+td.geoPtPickerList {
+	align: left;
+	vertical-align: top;
+}
+
+td.geoPtPickerMap {
+	vertical-align: top;
+}
+
+div.geoPtPickerMap {
+}
+
+select.geoPtPickerSelect {
+	min-width: 200px;
+}
+
+select.hidden {
+	display: none;
+}
+
+input.geoPtPickerRemoveButton{
+}
+
+input.geoPtPickerUpButton{
+}
+
+input.geoPtPickerDownButton{
+}

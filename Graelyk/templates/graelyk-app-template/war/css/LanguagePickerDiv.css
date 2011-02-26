@@ -1,0 +1,69 @@
+div.languagePickerArea {
+	max-width: 800px;
+}
+
+div.languagePickerArea span
+{
+	font-size: 1em;
+	font-weight: bold;
+	line-height: 1.5em;
+}
+
+div.languagePickerHiddenInputs {
+	display: none;
+}
+
+div.languagePickerCountryColumn {
+	min-width: 250px;
+	/*max-width: 250px;*/
+	margin: 2px;
+	float: left;
+	display: inline;
+}
+
+div.languagePickerLanguageColumn {
+	min-width: 250px;
+	/*max-width: 250px;*/
+	margin: 2px;
+	float: left;
+	display: inline;
+}
+
+div.languagePickerButtonColumn {
+	max-width: 30px;
+	margin: 2px;
+	float: left;
+	display: inline;
+}
+
+div.languagePickerSelectedLanguageColumn {
+	min-width: 250px;
+	/*max-width: 250px;*/
+	margin: 2px;
+	float: left;
+	display: inline;
+}
+
+input.languagePickerAddButton {
+	width: 30px;
+}
+
+input.languagePickerRemoveButton {
+	width: 30px;
+}
+
+select.languagePickerRegion {
+	min-width: 250px;
+}
+
+select.languagePickerCountry {
+	min-width: 250px;
+}
+
+select.languagePickerLanguage {
+	min-width: 250px;
+}
+
+select.languagePickerSelectedLanguage {
+	min-width: 250px;
+}
