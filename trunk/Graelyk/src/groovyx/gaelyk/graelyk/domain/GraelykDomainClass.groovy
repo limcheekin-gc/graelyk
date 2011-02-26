@@ -173,6 +173,7 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 		establishPersistentProperties()
 		getConstrainedProperties()
 		establishCastingRegistry()
+		errors.setMessageSource(StaticResourceHolder.getMessageBundle(getClazz().getName()))
 		return this
 	}
 	

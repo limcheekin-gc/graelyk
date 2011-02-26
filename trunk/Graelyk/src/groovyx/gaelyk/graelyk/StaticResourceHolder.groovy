@@ -4,6 +4,7 @@ import groovyx.gaelyk.graelyk.validation.GraelykDomainClassValidator
 import groovyx.gaelyk.graelyk.util.MessageMap
 import groovyx.gaelyk.graelyk.util.MultiLinePropertyReader
 import groovyx.gaelyk.graelyk.util.StringUtils;
+import com.google.apphosting.api.ApiProxy
 
 class StaticResourceHolder
 {
@@ -11,7 +12,7 @@ class StaticResourceHolder
 	static MessageMap messageBundle //Stores localization/il8n message bundles.
 	static Map validators = [:] //Stores validators for domain classes - once a domain class' validator is loaded, future instances of the same domain class will load their validator from this Map to save time.
 	static Map resources = [:] //A place to store any other static resources your application might need. e.g. see FormTaglyk.localeListForUserLocale()
-	                         
+	static boolean localMode = ApiProxy.currentEnvironment.class.name.contains("LocalHttpRequestEnvironment")
 	static Map getAppProperties()
 	{
 		if(!appProperties)
@@ -45,6 +46,22 @@ class StaticResourceHolder
 			if(appProperties.appDefaultCurrencyLocale)
 			{
 				appProperties.appDefaultCurrencyLocale = StringUtils.parseLocaleString(appProperties.appDefaultCurrencyLocale.trim()) ?: Locale.getDefault()
+			}
+			
+			//Set the correct server url.
+			if(StaticResourceHolder.localMode)
+			{
+				if(appProperties["serverURL.localMode"])
+				{
+					appProperties.serverURL = appProperties["serverURL.localMode"]
+				}
+			}
+			else
+			{
+				if(appProperties["serverURL.liveMode"])
+				{
+					appProperties.serverURL = appProperties["serverURL.liveMode"]
+				}
 			}
 		}
 		

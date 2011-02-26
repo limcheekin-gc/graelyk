@@ -101,6 +101,7 @@ class GraelykCategory
 			//(e.g. by finding the current user, accessing their profile, 
 			//and reading their locale preferences, then setting: 
 			//userLocale = userProfile.locales)
+			/*
 			//Fall back to the locales specified in the query variable specified in graelyk.properties (graelyk.userLocale.query), and this will set a cookie if (graelyk.userLocale.cookie) exists
 			if(!userLocale)
 			{
@@ -132,6 +133,11 @@ class GraelykCategory
 				{
 					userLocale = userLocale.getValue().split(appProperties["graelyk.userLocale.cookieQuerySeparator"]).toList().collect{it.toLocale()}
 				}
+			}
+			*/
+			if(!userLocale)
+			{
+				userLocale = getLocalesFromQueryOrCookie()
 			}
 			//Fall back to the locales specified by the browser in the HTTP header
 			if(!userLocale)
@@ -324,6 +330,17 @@ class GraelykCategory
 		}
 	}
 	
+	static void unwrapVariable(script, varName)
+	{
+		use(ServletCategory)
+		{
+			if(script.request.variableWrapper)
+			{
+				script."$varName" = script.request.variableWrapper[varName]
+			}
+		}
+	}
+	
 	
 	/*
 		This method can be used to allow taglyks to have a body closure that contains HTML.
@@ -372,6 +389,45 @@ class GraelykCategory
 			return body.toString()
 		}
 		return ""
+	}
+	
+	/*
+	 * This method gets the locale from a query string or cookie
+	 */
+	public static List getLocalesFromQueryOrCookie(Object script)
+	{
+		//Get the locales specified in the query variable specified in graelyk.properties (graelyk.userLocale.query), and this will set a cookie if (graelyk.userLocale.cookie) exists
+		def appProperties = StaticResourceHolder.getAppProperties()
+		def queryName = appProperties["graelyk.userLocale.query"]
+		def userLocale
+		if(queryName)
+		{
+			userLocale = script.params[queryName]
+			if(userLocale)
+			{
+				//Set the cookie if a name for the cookie is in the graelyk.properties file
+				def cookieName = appProperties["graelyk.userLocale.cookie"]
+				if(cookieName)
+				{
+					Cookie cookie = new Cookie(cookieName, userLocale)
+					cookie.setMaxAge(60*60*24*365)
+					cookie.setPath("/")
+					script.response.addCookie(cookie)
+				}
+				//Set the variable for this script
+				userLocale = userLocale.split(appProperties["graelyk.userLocale.cookieQuerySeparator"]).toList().collect{it.toLocale()}
+			}
+		}
+		//Get the locales specified in a cookie whose name is specified in graelyk.properties (graelyk.userLocale.cookie)
+		if(!userLocale)
+		{
+			userLocale = script.request.cookies.find{it.getName() == appProperties["graelyk.userLocale.cookie"]}
+			if(userLocale)
+			{
+				userLocale = userLocale.getValue().split(appProperties["graelyk.userLocale.cookieQuerySeparator"]).toList().collect{it.toLocale()}
+			}
+		}
+		return userLocale
 	}
 	
 	
