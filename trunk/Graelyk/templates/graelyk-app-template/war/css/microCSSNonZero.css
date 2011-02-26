@@ -1,0 +1,610 @@
+.center {text-align: center;}
+
+.hidden {display: none;}
+.inline {display: inline;}
+.inline-block {display: inline-block;}
+.block {display: block;}
+
+/*
+
+$Id: micro.css 17 2007-09-03 23:30:04Z massimo $
+ 
+MicroCss by Scaracco (http://scaracco.wordpress.org - scaracco@gmail.com)
+
+Uso delle classi:
+
+	.left<NUM>
+	.right<NUM>
+
+	<NUM> = 20 25 33 50 66 75 80
+
+*/
+
+/******************************************************************************/
+/* base                                                                       */
+/******************************************************************************/
+
+/* float */
+.left, .leftAuto, .left10, .left20,  .left25,  .left30, .left33,  .left40, .left45, .left50,  .left60, .left66,  .left70, .left75,  .left80, .left90  {float: left }
+.right, .rightAuto, .right10, .right20, .right25, .right30, .right33, .right40, .right45, .right50, .right60, .right66, .right70, .right75, .right80, .right90 {float: right}
+
+/* width */
+.leftAuto, .rightAuto {width: auto}
+.left10, .right10 {width: 10%}
+.left20, .right20 {width: 20%}
+.left25, .right25 {width: 25%}
+.left30, .right30 {width: 30%}
+.left33, .right33 {width: 34%}
+.left40, .right40 {width: 40%}
+.left45, .right45 {width: 45%}
+.left50, .right50 {width: 50%}
+.left60, .right60 {width: 60%}
+.left66, .right66 {width: 66%}
+.left70, .right70 {width: 70%}
+.left75, .right75 {width: 75%}
+.left80, .right80 {width: 80%}
+.left90, .right90 {width: 90%}
+
+/******************************************************************************/
+/* clearfix                                                                   */
+/* http://www.positioniseverything.net/easyclearing.html                      */
+/******************************************************************************/
+.wrap:after {content: "."; display: block; height: 0; clear: both; visibility: hidden}
+* html .wrap {height: 1%} /* IE hack */
+
+
+/*
+
+	Nonzero1.0 by nodethirtythree design
+	http://www.nodethirtythree.com
+	missing in a maze
+
+*/
+
+/* This controls the width of the fluid width layouts */
+
+div.fluid95
+{
+width: 95% !important;
+}
+
+/* This controls the width of the fixed width layouts */
+
+div.fluidAuto
+{
+width: auto !important;
+}
+
+div.fixed1600
+{
+min-width: 1600px !important;
+max-width: 100% !important;
+}
+
+div.fixed1200
+{
+min-width: 1200px !important;
+max-width: 100% !important;
+}
+
+div.fixed1000
+{
+min-width: 1000px !important;
+max-width: 100% !important;
+}
+
+div.fixed800
+{
+min-width: 800px !important;
+max-width: 100% !important;
+}
+
+/* Basic Stuff */
+
+*
+{
+margin: 0;
+padding: 0;
+}
+
+body
+{
+font-size: 9pt;
+font-family: "trebuchet ms", helvetica, sans-serif;
+min-height: 100%;
+}
+
+h1,h2,h3,h4,h5,h6
+{
+font-weight: normal;
+letter-spacing: -1px;
+text-transform: lowercase;
+}
+
+h3,h4,h5,h6
+{
+}
+
+h1 span
+{
+font-weight: bold;
+}
+
+h3 span
+{
+font-weight: bold;
+}
+
+h4 span
+{
+font-weight: bold;
+}
+
+br.clear
+{
+clear: both;
+}
+
+img
+{
+padding: 3px;
+border: solid 1px;
+}
+
+img.floatTL
+{
+float: left;
+margin-right: 18px;
+margin-bottom: 18px;
+margin-top: 6px;
+}
+
+img.floatTR
+{
+float: right;
+margin-left: 18px;
+margin-bottom: 18px;
+margin-top: 6px;
+}
+
+img.floatL
+{
+float: left;
+margin-right: 18px;
+margin-bottom: 18px;
+margin-top: 18px;
+}
+
+img.floatR
+{
+float: right;
+margin-left: 18px;
+margin-bottom: 18px;
+margin-top: 18px;
+}
+
+a
+{
+text-decoration: underline;
+}
+
+a:hover
+{
+text-decoration: none;
+}
+
+ul.links
+{
+list-style: none;
+}
+
+ul.links li
+{
+line-height: 2em;
+}
+
+ul.links li.first
+{
+}
+
+p
+{
+line-height: 1.8em;
+}
+
+/* Header */
+
+#header
+{
+/*width:100%;*/
+/*height:122px;*/
+}
+
+#header_inner
+{
+position: relative;
+/*width: 950px;*/
+height:122px;
+margin: 0 auto;
+}
+
+/* Logo */
+
+#logo
+{
+position: absolute;
+left: 5px;
+top: 0;
+}
+
+#logo h1
+{
+display: inline;
+font-size: 3em;
+}
+
+#logo h2
+{
+display: inline;
+/*padding-left: 6px;*/
+font-size: 1.0em;
+}
+
+#logo img
+{
+	border: 0;
+	padding: 0;
+}
+
+/* TopText */
+#topText
+{
+position: absolute;
+left: 340px;
+margin-left: 6px;
+top: 10px;
+}
+
+#topText h2
+{
+display: inline;
+/*padding-left: 6px;*/
+font-size: 1.0em;
+}
+
+#topText ul
+{
+list-style: none;
+display: inline;
+padding: 0;
+}
+
+#topText ul li:after
+{
+	content: " | "
+}
+
+#topText ul li
+{
+display: inline;
+}
+
+/* Menu */
+
+#menu
+{
+position: absolute;
+left: 340px;
+bottom: 0;
+}
+
+#menu ul
+{
+list-style: none;
+}
+
+#menu li
+{
+float: left;
+}
+
+#menu li > form
+{
+height: 1.5em;
+margin-left: 6px;
+display: block;
+padding: 12px 16px 12px 16px;
+border: solid 1px;
+font-weight: bold;
+font-size: 1.1em;
+text-transform: lowercase;
+text-decoration: none;
+}
+
+#menu li > a, #menu li > span
+{
+height: 1.5em;
+margin-left: 6px;
+display: block;
+padding: 16px 16px 8px 16px;
+border: solid 1px;
+font-weight: bold;
+font-size: 1.1em;
+text-transform: lowercase;
+text-decoration: none;
+}
+
+#menu li > a.active
+{
+border: solid 1px;
+}
+
+/* Submenu */
+#submenu
+{
+margin: 1px 0 0 0;
+height: 60px;
+}
+
+#submenu_inner
+{
+position: relative;
+top: 0;
+}
+
+#submenu ul
+{
+list-style: none;
+}
+
+#submenu li
+{
+float: left;
+}
+
+#submenu li > form
+{
+margin-left: 6px;
+display: block;
+padding: 2px 8px 2px 8px;
+/*border: solid 1px;*/
+font-weight: bold;
+font-size: 0.9em;
+text-transform: lowercase;
+text-decoration: none;
+}
+
+#submenu li > a, #submenu li > span
+{
+margin-left: 6px;
+display: block;
+padding: 4px 8px 4px 8px;
+/*border: solid 1px;*/
+font-weight: bold;
+font-size: 1.0em;
+text-transform: lowercase;
+text-decoration: none;
+}
+
+#submenu > li > a.active, #submenu > li > span.active
+{
+/*border: solid 1px;*/
+}
+
+/* Main */
+
+#main
+{
+}
+
+#main_inner
+{
+position: relative;
+width: 950px;
+margin: 0 auto;
+/*padding-top: 42px;*/
+}
+
+#main_inner p
+{
+text-align: justify;
+margin-bottom: 24px;
+}
+
+#main_inner ul
+{
+margin-bottom: 24px;
+}
+
+#main_inner h3,h4
+{
+border-bottom: dotted 1px;
+position: relative;
+}
+
+#main_inner h3
+{
+font-size: 2.1em;
+padding-bottom: 2px;
+margin-bottom: 10px;
+}
+
+#main_inner h4
+{
+font-size: 1.2em;
+padding-bottom: 2px;
+margin-bottom: 17px;
+margin-top: 12px;
+}
+
+#main_inner .post
+{
+position: relative;
+}
+
+#main_inner .post h3
+{
+position: relative;
+font-size: 1.7em;
+padding-bottom: 1.2em;
+}
+
+#main_inner .post ul.post_info
+{
+list-style: none;
+position: absolute;
+top: 3em;
+font-size: 0.8em;
+}
+
+#main_inner .post ul.post_info li
+{
+background-position: 0 2px;
+background-repeat: no-repeat;
+display: inline;
+padding-left: 18px;
+}
+
+#main_inner .post ul.post_info li.date
+{
+}
+
+#main_inner .post ul.post_info li.comments
+{
+margin-left: 13px;
+}
+
+
+/* Form */
+
+
+input.button
+{
+border: solid 1px;
+font-weight: bold;
+text-transform: lowercase;
+font-size: 0.8em;
+height: 2.5em;
+padding: 3px 3px 3px 3px;
+}
+
+input.text
+{
+border: solid 1px;
+font-size: 1.0em;
+padding: 3px 3px 3px 3px;
+}
+
+/* Search */
+
+div.search
+{
+position: relative;
+width: 100%;
+margin-bottom: 24px;
+}
+
+input.search.text
+{
+position: absolute;
+top: 0;
+left: 0;
+width: 9.5em;
+}
+
+input.search.button
+{
+position: absolute;
+top: 0em;
+right: 0em;
+min-width: 2em;
+/*max-width: 2.5em;*/
+}
+
+/* Log In */
+
+input.login.text
+{
+width: 6em;
+}
+
+input.login.button
+{
+min-width: 2em;
+}
+
+/* FIXED LAYOUT - COLUMNS */
+
+	/* Center column */
+	.columnCenter
+	{
+		width: 700px;
+		padding: 0 24px 6px 24px;
+	}
+	
+	.columnCenterFluid
+	{
+		min-width: 700px;
+		max-width: 1600px;
+		padding: 0 24px 6px 24px;
+	}
+	
+	/* Left columns */	
+	.columnLeft
+	{
+		width: 13.0em;
+		padding: 0 24px 6px 24px;
+		border-right: dotted 1px;
+	}
+	
+	/* Right columns */	
+	.columnRight
+	{
+		width: 13.0em;
+		padding: 0 24px 6px 24px;
+		border-left: dotted 1px;
+	}
+	
+	
+	
+/* Footer */
+
+#footer
+{
+height:329px;
+margin: 0 auto;
+text-align: center;
+clear: both;
+margin-top: 12px;
+padding-top: 8px;
+font-size: 1.1em;
+}
+
+#footer ul li, #footer ol li
+{
+	list-style-position: inside;
+}
+
+#footer .wrap
+{
+/*margin: 0 5% 0 5%;*/
+}
+
+.footerColumnLeft
+{
+	/*padding-left: 1%;*/
+}
+
+.footerColumnRight
+{
+	/*padding-left: 1%;*/
+}
+
+.footerColumnBox
+{
+	height: 250px;
+	text-align: left;
+	padding: 10px 10px 10px 10px;
+	margin: 10px 10px 10px 10px;
+	border: dotted 1px;
+}

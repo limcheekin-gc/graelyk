@@ -1,0 +1,2 @@
+install ObgaektifyPlugin
+install GraelykPlugin
