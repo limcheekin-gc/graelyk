@@ -1,0 +1,218 @@
+<%
+	jQueryURL = "\\\${appProperties['jquery.url']}"
+	jQueryUIURL = "\\\${appProperties['jquery.ui.url']}"
+	jQueryUICSSURL = "\\\${appProperties['jquery.ui.css.url']}"
+
+	if(cp && cp.widget && cp.widget.toLowerCase() == "country")
+		out << renderCountryDisplay(domainClass, property)
+	else if(cp && cp.widget && cp.widget.toLowerCase() == "locale")
+		out << renderISO639_3LocaleDisplay(domainClass, property)
+	else if(cp && cp.widget && (cp.widget.toLowerCase() == "iso639-3" || cp.widget.toLowerCase() == "iso639_3"))
+		out << renderISO639_3LocaleDisplay(domainClass, property)
+	else if(property.dataType == com.google.appengine.api.datastore.GeoPt && cp && cp.widget && cp.widget.toLowerCase() == "map")
+		out << renderGeoPtMapDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Blob || property.collectionOf == com.google.appengine.api.datastore.Blob ||
+		property.type == groovyx.gaelyk.graelyk.util.FileHolder || property.collectionOf == groovyx.gaelyk.graelyk.util.FileHolder)
+	{
+		out << renderFileDisplay(domainClass, property)
+	}
+    else if(property.type == Boolean.class || property.type == boolean.class || property.collectionOf == Boolean.class || property.collectionOf == boolean.class)
+        out << renderBooleanDisplay(domainClass, property)
+    else if(Number.class.isAssignableFrom(property.type) || (property.type.isPrimitive() && property.type != boolean.class) || 
+    	(property.collectionOf != null && Number.class.isAssignableFrom(property.collectionOf)) ||
+    	(property.collectionOf != null && (property.collectionOf.isPrimitive() && property.collectionOf != boolean.class)))
+    {
+        out << renderNumberDisplay(domainClass, property)
+    }
+    else if (property.type == String.class || property.collectionOf == String.class)
+        out << renderStringDisplay(domainClass, property)
+    else if (property.type == Date.class || property.type == java.sql.Date.class || property.type == java.sql.Time.class || property.type == Calendar.class ||
+			property.collectionOf == Date.class || property.collectionOf == java.sql.Date.class || property.collectionOf == java.sql.Time.class || property.collectionOf == Calendar.class)
+        out << renderDateDisplay(domainClass, property)
+    else if (property.type == URL.class || property.collectionOf == URL.class)
+        out << renderURLDisplay(domainClass, property)
+    else if (property.isEnum() || property.hasEnum())
+        out << renderEnumDisplay(domainClass, property)
+    else if (property.type == TimeZone.class || property.collectionOf == TimeZone.class)
+        out << renderTimeZoneDisplay(domainClass, property)
+    else if (property.type == Locale.class || property.collectionOf == Locale.class)
+        out << renderLocaleDisplay(domainClass, property)
+    else if (property.type == Currency.class || property.collectionOf == Currency.class)
+        out << renderCurrencyDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Text)
+		out << renderStringDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Category || property.collectionOf == com.google.appengine.api.datastore.Category)
+		out << renderStringDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Email || property.collectionOf == com.google.appengine.api.datastore.Email)
+		out << renderStringDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.IMHandle || property.collectionOf == com.google.appengine.api.datastore.IMHandle)
+		out << renderStringDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Link || property.collectionOf == com.google.appengine.api.datastore.Link)
+		out << renderStringDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.PhoneNumber || property.collectionOf == com.google.appengine.api.datastore.PhoneNumber)
+		out << renderStringDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.PostalAddress || property.collectionOf == com.google.appengine.api.datastore.PostalAddress)
+		out << renderStringDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.Rating || property.collectionOf == com.google.appengine.api.datastore.Rating)
+		out << renderNumberDisplay(domainClass, property)
+	else if(property.type == com.google.appengine.api.datastore.GeoPt)
+		out << renderGeoPtDisplay(domainClass, property)
+    else if (property.XToMany || property.oneToMany || property.manyToMany)
+        out << renderXToMany(domainClass, property)
+    else if (property.XToOne || property.oneToOne || property.manyToOne)
+        out << renderXToOne(domainClass, property)
+   	
+    
+    //This method can be used to uniquely add a CSS file to the head portion of the html document.
+	private addCSS(cssURL)
+	{
+		String link = """<link rel="stylesheet" type="text/css" href="${cssURL}" />"""
+		if(!headerList.contains(link))
+		{
+			headerList << link
+		}
+	}
+	
+    //This method can be used to uniquely add an html fragment to the head portion of the html document.
+	private addHTML(String html)
+	{
+		if(!headerList.contains(html))
+		{
+			headerList << html
+		}	
+	}
+	
+    //This method can be used to uniquely add a JS file to the head portion of the html document.
+	private addJS(jsURL)
+	{
+		String script = """<script type="text/javascript" src="${jsURL}"></script>"""
+		if(!headerList.contains(script))
+		{
+			headerList << script
+		}
+	}
+
+    private String formatAttributes(attributes)
+    {
+    	StringBuffer sb = new StringBuffer()
+     	attributes.each{k,v->
+    		if(v.class == boolean || v instanceof Boolean)
+    		{
+    			sb << k + ":" + v.toString() + ", "
+    		}
+    		else if(Number.isAssignableFrom(v.class))
+    		{
+    			sb << k + ":" + v.toString() + ", "
+    		}
+    		else
+    		{
+    			sb << k + ':"' + v.toString() + '", '
+    		}
+    	}
+    	return sb.toString()
+    }
+
+	private renderBooleanDisplay(domainClass, property)
+	{
+		return """[% g_formatBoolean boolean:"\${${domainInstance}?.${property.name}}" %]"""
+	}
+	
+	private renderCountryDisplay(domainClass, property)
+	{
+		return """[% g_formatCountry country:${domainInstance}?.${property.name} %]"""
+	}
+	
+	private renderCurrencyDisplay(domainClass, property)
+	{
+		return """\${fieldValue(bean: ${domainInstance}, field: "${property.name}")}"""
+	}
+	
+	private renderDateDisplay(domainClass, property)
+	{
+		return """[% g_formatDate date:${domainInstance}?.${property.name} %]"""
+	}
+	   	
+   	private renderEnumDisplay(domainClass, property)
+	{
+		return """\${${domainInstance}?.${property.name}?.encodeAs("HTML")}"""
+	}
+
+	private renderFileDisplay(domainClass, property)
+	{
+		return """[% g_formatFile(bean:${domainInstance}, field:"${property.name}") %]"""
+	}
+	
+	private renderGeoPtDisplay(domainClass, property)
+	{
+		return """\${fieldValue(bean: ${domainInstance}, field: "${property.name}")}"""
+	}
+	
+	private renderGeoPtMapDisplay(domainClass, property)
+	{
+    	addJS('\\${localizedGoogleMapsURL()}')
+		addJS(jQueryURL)
+    	addJS("/js/GeoPtPicker.js")
+    	addCSS("/css/GeoPtPicker.css")
+		return """[% g_formatGeoPtMap geoPt:${domainInstance}?.${property.name}, name:"${property.name}_\${${domainInstance}?.id}"  %]"""
+	}
+	
+	private renderISO639_3LocaleDisplay(domainClass, property)
+	{
+		return """[% g_formatISO639_3Locale locale:${domainInstance}?.${property.name} %]"""
+	}
+	
+	private renderLocaleDisplay(domainClass, property)
+	{
+		return """\${fieldValue(bean: ${domainInstance}, field: "${property.name}")}"""
+	}
+	
+	private renderNumberDisplay(domainClass, property)
+	{
+		return """\${fieldValue(bean: ${domainInstance}, field: "${property.name}")}"""
+	}
+		
+	private renderStringDisplay(domainClass, property)
+	{
+		return """\${fieldValue(bean: ${domainInstance}, field: "${property.name}")}"""
+	}
+	
+	private renderTimeZoneDisplay(domainClass, property)
+	{
+		return """\${fieldValue(bean: ${domainInstance}, field: "${property.name}")}"""
+	}
+		
+	private renderURLDisplay(domainClass, property)
+	{
+		return """<a href="\${fieldValue(bean: ${domainInstance}, field: "${property.name}")}">\${fieldValue(bean: ${domainInstance}, field: "${property.name}")}</a>"""
+	}
+
+   	private renderXToMany(domainClass, property)
+   	{
+   		StringBuffer sb = new StringBuffer()
+   		sb << """<ul>[% for(${property.name[0]} in ${domainInstance}.${property.name}) { %]"""
+		if(property.hasKey)
+		{
+            sb << """<li>[% g_link(controller:"${property.relatedClassPropertyName}", action:"show", id:"\${${property.name[0]}.id}"){ ${property.name[0]}?.fetch().encodeAs("HTML") } %]</li>"""
+		}
+		else
+		{
+            sb << """<li>[% g_link(controller:"${property.relatedClassPropertyName}", action:"show", id:"\${${property.name[0]}.id}"){ ${property.name[0]}?.encodeAs("HTML") } %]</li>"""
+		}
+		sb << """[% } %]</ul>"""
+		return sb.toString()
+   	}
+   	
+   	private renderXToOne(domainClass, property)
+   	{
+   		if(property.hasKey)
+   		{
+			return """[% g_link(controller:"${property.relatedClassPropertyName}", action:"show", id:"\${${domainInstance}?.${property.name}?.id}"){ ${domainInstance}?.${property.name}?.fetch().encodeAs("HTML") } %]"""
+		}
+		else
+		{
+			return """[% g_link(controller:"${property.relatedClassPropertyName}", action:"show", id:"\${${domainInstance}?.${property.name}?.id}"){ ${domainInstance}?.${property.name}?.encodeAs("HTML") } %]"""
+		}
+   	}
+    
+
+%>

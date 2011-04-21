@@ -1,7 +1,7 @@
 <%
-	jQueryURL = "\${appProperties['jquery.url']}"
-	jQueryUIURL = "\${appProperties['jquery.ui.url']}"
-	jQueryUICSSURL = "\${appProperties['jquery.ui.css.url']}"
+	jQueryURL = "\\\${appProperties['jquery.url']}"
+	jQueryUIURL = "\\\${appProperties['jquery.ui.url']}"
+	jQueryUICSSURL = "\\\${appProperties['jquery.ui.css.url']}"
 
 	if(cp && cp.widget && cp.widget.toLowerCase() == "country")
 		out << renderCountryDisplay(domainClass, property)

@@ -3,7 +3,7 @@
 [% unwrapVariables() %]
 
 [% entityName = "\${message(code: '${domainClassPropertyName}.label', default: '${domainClassName}')}" %]
-[% headTitle = message(code:"default.list.label", args:[entityName]) %]
+[% headTitle = message(code:il8nPrefix + ".list.label", args:[entityName]) %]
 [% headIncludes = """
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <script type="text/javascript" src="\${appProperties['jquery.url']}"></script>
@@ -19,14 +19,14 @@
 
 [% include("/WEB-INF/includes/header.gtpl") %]
         <div class="body">
-            <h1>[% g_message(code:"default.list.label", args:[entityName]) %]</h1>
+            <h1>[% g_message(code:il8nPrefix + ".list.label", args:[entityName]) %]</h1>
             [% if(flash?.message){ %]
             <div class="message">\${flash.message}</div>
             [% } %]
 			<form method="post" class="inline">
             <div class="list">
 				<div class="nav">
-					\${isActionAllowed("create") ? '<span class="menuButton">' + link(class:"create", action:"create"){message(code:"default.new.label", args:[entityName])} + '</span>' : ''}
+					\${isActionAllowed("create") ? '<span class="menuButton">' + link(class:"create", action:"create"){message(code:il8nPrefix + ".new.label", args:[entityName])} + '</span>' : ''}
 				</div>
                 <table>
                     <thead>
@@ -82,7 +82,7 @@
 			[% if(isActionAllowed("deleteMultiple")) { %]
 				<div class="buttons">
 				<input type="checkbox" class="multi-checkbox" onclick="jQuery('.multi-checkbox').attr('checked', jQuery(this).attr('checked'));">
-				<span class="button">[% g_actionSubmit class:"delete", action:"deleteMultiple", value:message(code: 'default.button.delete-selected.label', default: 'Delete Selected'), onclick:"return confirm('\${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" %]</span>
+				<span class="button">[% g_actionSubmit class:"delete", action:"deleteMultiple", value:message(code: il8nPrefix + '.button.delete-selected.label', default: 'Delete Selected'), onclick:"return confirm('\${message(code: il8nPrefix + '.button.delete.confirm.message', default: 'Are you sure?')}');" %]</span>
 				</div>
 			[% } %]
 			[% if(${propertyName}Total > ${propertyName}PerPage) { %]

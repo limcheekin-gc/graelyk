@@ -1,7 +1,8 @@
 //def graelykHome = System.getenv("GRAELYK_HOME")
 binding.setVariable("graelykHome", System.getenv("GRAELYK_HOME"))
 binding.setVariable("baseDir", System.getProperty("user.dir"))
-binding.setVariable("templateDir", "default")
+//binding.setVariable("templateDir", "default")
+binding.setVariable("templateDir", "jquery")
 
 Closure graelykScript = {name ->
 	def potentialScript = new File("${graelykHome}/scripts/${name}.gant")

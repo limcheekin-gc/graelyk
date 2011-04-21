@@ -58,6 +58,7 @@ class GraelykCategory
 			defaultValue("view", "")
 			defaultValue("controllerName", "")
 			defaultValue("controllerURL", "")
+			defaultValue("il8nPrefix", "default")
 			defaultValue("controllerDefaultAction", "")
 			defaultValue("allowedActions", [])
 			defaultValue("allowedMethods", [:])
@@ -97,68 +98,7 @@ class GraelykCategory
 			//and creates the file "/war/graelyk.properties" in the Graelyk application directory.
 			appProperties = StaticResourceHolder.getAppProperties()
 			
-			//If a locale has not been specified by the calling script
-			//(e.g. by finding the current user, accessing their profile, 
-			//and reading their locale preferences, then setting: 
-			//userLocale = userProfile.locales)
-			/*
-			//Fall back to the locales specified in the query variable specified in graelyk.properties (graelyk.userLocale.query), and this will set a cookie if (graelyk.userLocale.cookie) exists
-			if(!userLocale)
-			{
-				def queryName = appProperties["graelyk.userLocale.query"]
-				if(queryName)
-				{
-					userLocale = params[queryName]
-					if(userLocale)
-					{
-						//Set the cookie if a name for the cookie is in the graelyk.properties file
-						def cookieName = appProperties["graelyk.userLocale.cookie"]
-						if(cookieName)
-						{
-							Cookie cookie = new Cookie(cookieName, userLocale)
-							cookie.setMaxAge(60*60*24*365)
-							cookie.setPath("/")
-							response.addCookie(cookie)
-						}
-						//Set the variable for this script
-						userLocale = userLocale.split(appProperties["graelyk.userLocale.cookieQuerySeparator"]).toList().collect{it.toLocale()}
-					}
-				}
-			}
-			//Fall back to the locales specified in a cookie whose name is specified in graelyk.properties (graelyk.userLocale.cookie)
-			if(!userLocale)
-			{
-				userLocale = request.cookies.find{it.getName() == appProperties["graelyk.userLocale.cookie"]}
-				if(userLocale)
-				{
-					userLocale = userLocale.getValue().split(appProperties["graelyk.userLocale.cookieQuerySeparator"]).toList().collect{it.toLocale()}
-				}
-			}
-			*/
-			if(!userLocale)
-			{
-				userLocale = getLocalesFromQueryOrCookie()
-			}
-			//Fall back to the locales specified by the browser in the HTTP header
-			if(!userLocale)
-			{
-				userLocale = request.getLocales().collect{it}
-			}
-			//Fall back to the appDefaultLocales specified in the graelyk.properties file
-			if(!userLocale)
-			{
-				userLocale = appProperties.appDefaultLocales
-			}
-			//Fall back to the appLocales specified in the graelyk.properties file
-			if(!userLocale)
-			{
-				userLocale = appProperties.appLocales
-			}
-			//Fall back to ""
-			if(!userLocale)
-			{
-				userLocale = [ Locale.getDefault() ]
-			}
+			userLocale = getLocales()
 			
 			//Specify locales for NumberFormat, Currency, and DateFormat, separate from the userLocale that is used
 			//for message localization. This allows the user to choose a message locale that is in a minority
@@ -246,7 +186,7 @@ class GraelykCategory
 			//Save a bunch of variables in the request object so they can be passed on to the view.
 			//The view can then use the unwrapVariables() method to copy them from request into the local scope of the view script
 			def varsToWrap = ["domainClassName", "controllerName", "controllerURL", "actionName",
-				"viewPath", "view", 
+				"il8nPrefix", "viewPath", "view", 
 				"controllerDefaultAction", "allowedActions", "adminActions", "userActions", "allowedMethods", "adminMethods", "userActions",
 				"appProperties", "messageBundle", "resources",
 				"admin", "flash",
@@ -390,6 +330,38 @@ class GraelykCategory
 		}
 		return ""
 	}
+	
+	
+	public static List getLocales(Object script)
+	{
+		def userLocale = []
+		if(!userLocale)
+		{
+			userLocale = script.getLocalesFromQueryOrCookie()
+		}
+		//Fall back to the locales specified by the browser in the HTTP header
+		if(!userLocale)
+		{
+			userLocale = script.request.getLocales().collect{it}
+		}
+		//Fall back to the appDefaultLocales specified in the graelyk.properties file
+		if(!userLocale)
+		{
+			userLocale = StaticResourceHolder.getAppProperties().appDefaultLocales
+		}
+		//Fall back to the appLocales specified in the graelyk.properties file
+		if(!userLocale)
+		{
+			userLocale = StaticResourceHolder.getAppProperties().appLocales
+		}
+		//Fall back to ""
+		if(!userLocale)
+		{
+			userLocale = [ Locale.getDefault() ]
+		}
+		return userLocale
+	}
+	
 	
 	/*
 	 * This method gets the locale from a query string or cookie

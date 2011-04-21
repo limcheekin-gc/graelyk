@@ -3,7 +3,7 @@
 [% unwrapVariables() %]
 
 [% entityName = "\${message(code: '${domainClassPropertyName}.label', default: '${domainClassName}')}" %]
-[% headTitle = message(code:"default.list.label", args:[entityName]) %]
+[% headTitle = message(code:il8nPrefix + ".list.label", args:[entityName]) %]
 [% headIncludes = """
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 @HeadIncludes@
@@ -17,7 +17,7 @@
 
 [% include("/WEB-INF/includes/header.gtpl") %]
         <div class="body">
-            <h1>[% g_message(code:"default.create.label", args:[entityName]) %]</h1>
+            <h1>[% g_message(code:il8nPrefix + ".create.label", args:[entityName]) %]</h1>
             [% if(flash.message)
 			{ %]
             <div class="message">\${flash.message}</div>
@@ -27,13 +27,13 @@
 			{ %]
                 <div class="dialog">
 					<div class="nav">
-						\${isActionAllowed("create") ? '<span class="menuButton">' + link(class:"create", action:"create"){message(code:"default.new.label", args:[entityName])} + '</span>' : ''}
+						\${isActionAllowed("create") ? '<span class="menuButton">' + link(class:"create", action:"create"){message(code:il8nPrefix + ".new.label", args:[entityName])} + '</span>' : ''}
 					</div>
 					<!-- Todo: Use ${propertyName}.myProperty / ${domainClassPropertyName}.myProperty, etc. to create the form -->
                 </div>
                 <div class="buttons">
 					[% if(isActionAllowed("save")) { %]
-						<span class="button">[% g_submitButton name:"create", class:"save", value:message(code: 'default.button.create.label', default: 'Create') %]</span>
+						<span class="button">[% g_submitButton name:"create", class:"save", value:message(code: il8nPrefix + '.button.create.label', default: 'Create') %]</span>
 					[% } %]
                 </div>
             [% } %]

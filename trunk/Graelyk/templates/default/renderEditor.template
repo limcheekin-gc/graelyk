@@ -1,9 +1,9 @@
 <%
-	jQueryURL = "\${appProperties['jquery.url']}"
-	jQueryUIURL = "\${appProperties['jquery.ui.url']}"
-	jQueryUICSSURL = "\${appProperties['jquery.ui.css.url']}"
-	ckEditorURL = "\${appProperties['ckeditor.url']}"
-	ckEditorJQueryURL = "\${appProperties['ckeditor.url']}"
+	jQueryURL = "\\\${appProperties['jquery.url']}"
+	jQueryUIURL = "\\\${appProperties['jquery.ui.url']}"
+	jQueryUICSSURL = "\\\${appProperties['jquery.ui.css.url']}"
+	ckEditorURL = "\\\${appProperties['ckeditor.url']}"
+	ckEditorJQueryURL = "\\\${appProperties['ckeditor.url']}"
 
 /*
     if(property.isArray && (property.collectionOf == byte.class || property.collectionOf == Byte))
