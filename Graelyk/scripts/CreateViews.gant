@@ -72,7 +72,6 @@ target("create-views":"Creates the views for the domain class")
 			}
 			overwrite = true
 		}
-
 		
 		//*******************************************
 		//Create the view file from a template

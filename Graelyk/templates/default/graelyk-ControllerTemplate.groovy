@@ -10,6 +10,7 @@ domainClassName = "${domainClassName}"
 view = "index"
 controllerName = "${domainClassPropertyName.toLowerCase()}" //Todo: Change this to the name you use in routes.groovy or web.xml
 controllerURL = "/" + controllerName
+il8nPrefix = "default" //Todo: Change this to the prefix you will use in the localization files for this domain class and its views, e.g. ${domainClassPropertyName}
 controllerDefaultAction = "index"
 flash = [:]
 allowedActions = ["index", "list", "show"]
@@ -32,7 +33,7 @@ Todo: Retrieve the user's locale preferences and set them. Otherwise they will b
   chooses to see localized messages in a minority language can also choose a locale that is actually 
   supported by Java for dates and numbers.
 */
-//userLocale = [new Locale("ln", "CG"), new Locale("fr", "FR"), new Locale("en", "US")]
+//userLocale = this.getLocalesFromQueryOrCookie() ?: [new Locale("ln", "CG"), new Locale("fr", "FR"), new Locale("en", "US")]
 //userNumberLocale = new Locale("en", "US")
 //userCurrencyLocale = new Locale("en", "US")
 //userDateLocale = new Locale("en", "US")
