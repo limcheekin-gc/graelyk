@@ -1,4 +1,3 @@
-<!-- JQUERY -->
 [% import com.google.appengine.api.datastore.* %]
 [% import ${domainClassFullName} %]
 [% unwrapVariables() %]
@@ -23,11 +22,16 @@
             <div class="message">\${flash.message}</div>
             [% } %]
             <div class="dialog">
-				<div class="nav">
-					\${isActionAllowed("list") ? '<span class="menuButton">' + link(class:"list", action:"list"){message(code:il8nPrefix + ".list.label", args:[entityName])} + '</span>' : ''}
-					\${isActionAllowed("create") ? '<span class="menuButton">' + link(class:"create", action:"create"){message(code:il8nPrefix + ".new.label", args:[entityName])} + '</span>' : ''}
+				<div class="ui-widget ui-widget-content ui-corner-all">
+					[% if(isActionAllowed("list")) { %]
+						[% g_jQueryButtonLink(action:"list", icon:"zoomout", text:message(code:il8nPrefix + ".list.label", args:[entityName])) %]
+					[% } %]
+
+					[% if(isActionAllowed("create")) { %]
+						[% g_jQueryButtonLink(action:"create", icon:"plus", text:message(code:il8nPrefix + ".new.label", args:[entityName])) %]
+					[% } %]
 				</div>
-                <table>
+                <table class="ui-widget ui-widget-content ui-corner-all">
                     <tbody>
                     <%
 						//excludedProps = Event.allEvents.toList() << 'version'
@@ -49,14 +53,16 @@
                     </tbody>
                 </table>
             </div>
-            <div class="buttons">
-                [% g_form([:]){ %]
+            <div class="ui-widget ui-widget-content ui-corner-all">
+                [% g_form(method:"post", id:"mainForm", action:""){ %]
+					[% g_hiddenField name:"action", id:"action", value:"" %]
                     [% g_hiddenField name:"id", value:${propertyName}?.id %]
-                    [% if(isActionAllowed("edit")) { %]
-						<span class="button">[% g_actionSubmit class:"edit", action:"edit", value:"\${message(code: il8nPrefix + '.button.edit.label', default: 'Edit')}" %]</span>
+					
+					[% if(isActionAllowed("delete")) { %]
+						[% g_jQueryActionSubmit(inputSelector:"#action", formSelector:"#mainForm", class:"right", icon:"trash", action:"delete", value:message(code: il8nPrefix + '.button.delete.label', default:'Delete'), onclick:"""if(!confirm("\${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}")){return false;} """ ) %]
 					[% } %]
-                    [% if(isActionAllowed("delete")) { %]
-						<span class="button">[% g_actionSubmit class:"delete", action:"delete", value:"\${message(code: il8nPrefix + '.button.delete.label', default: 'Delete')}", onclick:"return confirm('\${message(code: il8nPrefix + '.button.delete.confirm.message', default: 'Are you sure?')}');" %]</span>
+					[% if(isActionAllowed("edit")) { %]
+						[% g_jQueryActionSubmit(inputSelector:"#action", formSelector:"#mainForm", icon:"disk", action:"edit", value:message(code: il8nPrefix + '.button.edit.label', default:'Edit')) %]
 					[% } %]
                 [% } %]
             </div>

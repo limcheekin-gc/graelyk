@@ -1,4 +1,3 @@
-<!-- JQUERY -->
 [% import com.google.appengine.api.datastore.* %]
 [% import ${domainClassFullName} %]
 [% unwrapVariables() %]
@@ -27,14 +26,21 @@
                 [% g_renderErrors bean:${propertyName}, as:"list" %]
             </div>
             [% } %]
-            [% g_form(method:"post" <%= multiPart ? ', enctype:"multipart/form-data"' : '' %>) { %]
+            [% g_form(method:"post", id:"mainForm", action:"" <%= multiPart ? ', enctype:"multipart/form-data"' : '' %>) { %]
+				[% g_hiddenField name:"action", id:"action", value:"" %]
                 [% g_hiddenField name:"id", value:${propertyName}?.id %]
                 [% g_hiddenField name:"version", value:${propertyName}?.version %]
                 <div class="dialog">
-					<div class="nav">
-						\${isActionAllowed("create") ? '<span class="menuButton">' + link(class:"create", action:"create"){message(code:il8nPrefix + ".new.label", args:[entityName])} + '</span>' : ''}
+					<div class="ui-widget ui-widget-content ui-corner-all">
+						[% if(isActionAllowed("list")) { %]
+							[% g_jQueryButtonLink(action:"list", icon:"zoomout", text:message(code:il8nPrefix + ".list.label", args:[entityName])) %]
+						[% } %]
+						
+						[% if(isActionAllowed("create")) { %]
+							[% g_jQueryButtonLink(action:"create", icon:"plus", text:message(code:il8nPrefix + ".new.label", args:[entityName])) %]
+						[% } %]
 					</div>
-                    <table>
+                    <table class="ui-widget ui-widget-content ui-corner-all">
                         <tbody>
                         <%  
 							//excludedProps = Event.allEvents.toList() << 'version' << 'id' << 'dateCreated' << 'lastUpdated'
@@ -82,12 +88,12 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="buttons">
-					[% if(isActionAllowed("update")) { %]
-						<span class="button">[% g_actionSubmit class:"save", action:"update", value:message(code: il8nPrefix + '.button.update.label', default: 'Update') %]</span>
-					[% } %]
+                <div class="ui-widget ui-widget-content ui-corner-all">
 					[% if(isActionAllowed("delete")) { %]
-						<span class="button">[% g_actionSubmit class:"delete", action:"delete", value:message(code: il8nPrefix + '.button.delete.label', default: 'Delete'), onclick:"return confirm('\${message(code: il8nPrefix + '.button.delete.confirm.message', default: 'Are you sure?')}');" %]</span>
+						[% g_jQueryActionSubmit(inputSelector:"#action", formSelector:"#mainForm", class:"right", icon:"trash", action:"delete", value:message(code: il8nPrefix + '.button.delete.label', default:'Delete'), onclick:"""if(!confirm("\${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}")){return false;} """ ) %]
+					[% } %]
+					[% if(isActionAllowed("update")) { %]
+						[% g_jQueryActionSubmit(inputSelector:"#action", formSelector:"#mainForm", icon:"disk", action:"update", value:message(code: il8nPrefix + '.button.update.label', default:'Update')) %]
 					[% } %]
                 </div>
 				<%= hiddenFields.toString() %>

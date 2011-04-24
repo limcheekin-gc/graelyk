@@ -12,7 +12,7 @@ class StaticResourceHolder
 	static MessageMap messageBundle //Stores localization/il8n message bundles.
 	static Map validators = [:] //Stores validators for domain classes - once a domain class' validator is loaded, future instances of the same domain class will load their validator from this Map to save time.
 	static Map resources = [:] //A place to store any other static resources your application might need. e.g. see FormTaglyk.localeListForUserLocale()
-	static boolean localMode = null
+	static boolean localMode = true
 	
 	static
 	{

@@ -98,7 +98,10 @@ class GraelykCategory
 			//and creates the file "/war/graelyk.properties" in the Graelyk application directory.
 			appProperties = StaticResourceHolder.getAppProperties()
 			
-			userLocale = getLocales()
+			if(!userLocale)
+			{
+				userLocale = getLocales()
+			}
 			
 			//Specify locales for NumberFormat, Currency, and DateFormat, separate from the userLocale that is used
 			//for message localization. This allows the user to choose a message locale that is in a minority

@@ -1,4 +1,3 @@
-<!-- JQUERY -->
 [% import com.google.appengine.api.datastore.* %]
 [% import ${domainClassFullName} %]
 [% unwrapVariables() %]
@@ -29,13 +28,16 @@
                 [% g_renderErrors(bean:${propertyName}, as:"list") %]
             </div>
             [% } %]
-            [% g_form(action:"save", method:"post" <%= multiPart ? ', enctype:"multipart/form-data"' : '' %>) 
+            [% g_form(action:"", id:"mainForm", method:"post" <%= multiPart ? ', enctype:"multipart/form-data"' : '' %>) 
 			{ %]
+				[% g_hiddenField name:"action", id:"action", value:"" %]
                 <div class="dialog">
-					<div class="nav">
-						\${isActionAllowed("create") ? '<span class="menuButton">' + link(class:"create", action:"create"){message(code:il8nPrefix + ".new.label", args:[entityName])} + '</span>' : ''}
+					<div class="ui-widget ui-widget-content ui-corner-all">
+						[% if(isActionAllowed("list")) { %]
+							[% g_jQueryButtonLink(action:"list", icon:"zoomout", text:message(code:il8nPrefix + ".list.label", args:[entityName])) %]
+						[% } %]
 					</div>
-                    <table>
+                    <table class="ui-widget ui-widget-content ui-corner-all">
                         <tbody>
                         <%  
 							//excludedProps = Event.allEvents.toList() << 'version' << 'id' << 'dateCreated' << 'lastUpdated'
@@ -83,9 +85,9 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="buttons">
-                    [% if(isActionAllowed("save")) { %]
-						<span class="button">[% g_submitButton name:"create", class:"save", value:message(code: il8nPrefix + '.button.create.label', default: 'Create') %]</span>
+                <div class="ui-widget ui-widget-content ui-corner-all">
+					[% if(isActionAllowed("save")) { %]
+						[% g_jQueryActionSubmit(inputSelector:"#action", formSelector:"#mainForm", icon:"disk", action:"save", value:message(code: il8nPrefix + '.button.create.label', default:'Create')) %]
 					[% } %]
                 </div>
 				<%= hiddenFields.toString() %>
