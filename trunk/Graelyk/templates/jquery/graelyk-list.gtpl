@@ -1,4 +1,3 @@
-<!-- JQUERY -->
 [% import com.google.appengine.api.datastore.* %]
 [% import ${domainClassFullName} %]
 [% unwrapVariables() %]
@@ -28,11 +27,12 @@
 			[% g_hiddenField name:"action", id:"action", value:"" %]
 
 			
-			<div>
+			<div class="ui-widget ui-widget-content ui-corner-all">
 				[% if(isActionAllowed("deleteMultiple")) { %]
 					<input type="checkbox" class="multi-checkbox" onclick="jQuery('.multi-checkbox').attr('checked', jQuery(this).attr('checked'));">
 					[% g_jQueryActionSubmit(icon:"trash", action:"deleteMultiple", value:message(code:il8nPrefix + '.button.delete-selected.label', default:'Delete Selected'), onclick:"if(!confirm(\"\${message(code:il8nPrefix + '.button.delete.confirm.message', default:'Are you sure?')}\")){return false;}") %]
 				[% } %]
+				
 				[% if(isActionAllowed("create")) { %]
 					[% g_jQueryButtonLink(action:"create", icon:"plus", text:message(code:il8nPrefix + ".new.label", args:[entityName])) %]
 				[% } %]
@@ -90,14 +90,16 @@
                     </tbody>
                 </table>
             </div>
-			[% if(isActionAllowed("deleteMultiple")) { %]
-				<input type="checkbox" class="multi-checkbox" onclick="jQuery('.multi-checkbox').attr('checked', jQuery(this).attr('checked'));">
-				[% g_jQueryActionSubmit(icon:"trash", action:"deleteMultiple", value:message(code:il8nPrefix + '.button.delete-selected.label', default:'Delete Selected'), onclick:"if(!confirm(\"\${message(code:il8nPrefix + '.button.delete.confirm.message', default:'Are you sure?')}\")){return false;}") %]
-			[% } %]
+			<div class="ui-widget ui-widget-content ui-corner-all">
+				[% if(isActionAllowed("deleteMultiple")) { %]
+					<input type="checkbox" class="multi-checkbox" onclick="jQuery('.multi-checkbox').attr('checked', jQuery(this).attr('checked'));">
+					[% g_jQueryActionSubmit(icon:"trash", action:"deleteMultiple", value:message(code:il8nPrefix + '.button.delete-selected.label', default:'Delete Selected'), onclick:"if(!confirm(\"\${message(code:il8nPrefix + '.button.delete.confirm.message', default:'Are you sure?')}\")){return false;}") %]
+				[% } %]
+			</div>
 			[% if(${propertyName}Total > ${propertyName}PerPage) { %]
-            <div class="paginateButtons">
-                [% g_paginate(total:"\${${propertyName}Total}", max:"\${${propertyName}PerPage}") %]
-            </div>
+			<div class="paginateButtons ui-widget ui-widget-content ui-corner-all">
+				[% g_paginate(total:"\${${propertyName}Total}", max:"\${${propertyName}PerPage}") %]
+			</div>
 			[% } %]
 			</form>
         </div>

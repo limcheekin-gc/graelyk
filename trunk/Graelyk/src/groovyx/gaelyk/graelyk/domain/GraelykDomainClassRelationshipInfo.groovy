@@ -60,7 +60,7 @@ class GraelykDomainClassRelationshipInfo
 			hasKey = true
 			keyOf = AnnotationUtils.getAnnotationValue(this.relationshipInfoDomainClass, this.relationshipInfoName, GDC)
 		}
-		else if((isArray || isCollection) && Key.class.isAssignableFrom(collectionOf))
+		else if((isArray || isCollection) && collectionOf != null && Key.class.isAssignableFrom(collectionOf))
 		{
 			hasKey = true
 			keyOf = AnnotationUtils.getAnnotationValue(this.relationshipInfoDomainClass, this.relationshipInfoName, GDC)

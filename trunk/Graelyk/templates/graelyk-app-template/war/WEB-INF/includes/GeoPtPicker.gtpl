@@ -51,7 +51,7 @@ request.includeReturn = captureOut(){
 		def showSelect = true
 		if(attrs.containsKey("showSelect")){showSelect = attrs.remove("showSelect")}
 		def hiddenSelectClass = ""
-		if(showSelect)
+		if(!showSelect)
 		{
 			hiddenSelectClass = " hidden"
 		}
