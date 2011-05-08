@@ -18,7 +18,8 @@ class StaticResourceHolder
 	{
 		try
 		{
-			localMode = ApiProxy.currentEnvironment.class.name.contains("LocalHttpRequestEnvironment")
+			//System.out.println("localMode: " + ApiProxy.currentEnvironment.class.name.contains("Local") + " " + ApiProxy.currentEnvironment.class.name)
+			localMode = ApiProxy.currentEnvironment.class.name.contains("Local")
 		}
 		catch(Exception e){}
 	}
@@ -100,7 +101,10 @@ class StaticResourceHolder
 	static Map getMessageBundle(String domainClassName, List localeList)
 	{
 		//Add the default locales to the localeList that was passed in. The localeList passed in could be the user's preferred locales. The site's default locales are added to this list.
-		getAppProperties()["appLocales"].each{loc->
+		//getAppProperties()["appLocales"].each{loc->
+		def locs = getAppProperties()["appLocales"]
+		for(loc in locs)
+		{
 			if(!localeList.contains(loc))
 			{
 				localeList << loc

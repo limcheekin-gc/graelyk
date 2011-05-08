@@ -290,7 +290,9 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 	private void establishProperties()
 	{
 		def props = this.getMetaPropertyValues()
-		props.each{p->
+		//props.each{p->
+		for(p in props)
+		{
 			//try
 			//{
 				if(!excludedProperties.contains(p.name))
@@ -541,7 +543,11 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
         }
 		
 		//Add other constraints (for Google data types) that should be automatic
-		propertyMap.each{name, prop->
+		//propertyMap.each{name, prop->
+        for(pmEntry in propertyMap)
+        {
+        	def name = pmEntry.key
+        	def prop = pmEntry.value
 			ConstrainedProperty cp = constrainedProps[name]
 			constrainedProps[name] = initializeAutomaticConstraints(name, prop, cp)
 		}
@@ -657,7 +663,11 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 		//These are fields that identify the presence of a checkbox.
 		def checkboxRemoveList = []
 		def checkboxNullifyList = []
-		params.each{key, value->
+		//params.each{key, value->
+		for(pEntry in params)
+		{
+    		def key = pEntry.key
+       		def value = pEntry.value
 			if(key.startsWith("_"))
 			{
 				//Add the names of all the _myCheckbox params to be removed after the completion of this loop
@@ -678,18 +688,26 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 			}
 		}
 		//Remove all the _myCheckbox params
-		checkboxRemoveList.each{key->
+		//checkboxRemoveList.each{key->
+		for(key in checkboxRemoveList)
+		{
 			params.remove(key)
 		}
 		//Add the needed myCheckbox params with a value of null
-		checkboxNullifyList.each{key->
+		//checkboxNullifyList.each{key->
+		for(key in checkboxNullifyList)
+		{
 			params[key] = false
 		}
 		
 		//Load the persistable properties in the domain class with values from the HTTP request.
 		//Only load properties that actually exist.
 		//Special handling for Dates and GeoPts (which come in multiple pieces) and for multi-valued fields like checkboxes and selects
-		params.each{key, value->
+		//params.each{key, value->
+		for(pEntry in params)
+		{
+			def key = pEntry.key
+			def value = pEntry.value
 			if(this.hasProperty(key))
 			{
 				def propertyType = this.getMetaPropertyValues().find{it.name == key}.type
@@ -725,7 +743,11 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 					//This is where we will store the list of transformed values
 					nestedStructMap[key] = []
 					                        
-					value.eachWithIndex{val, index->
+					//value.eachWithIndex{val, index->
+					def index = -1
+					for(val in value)
+					{
+						index++;
 						//e.g. if the value contains date.STRUCT, this will call the method script.evaluateDateStruct(params, key)
 						def prefix = val[0..-(".STRUCT".size()+1)]
 						def newVal = this."evaluate${prefix[0].toUpperCase()}${prefix[1..-1]}Struct"(params, key, index)
@@ -768,7 +790,9 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 					}
 					else 
 					{
-						valueArray.each{val->
+						//valueArray.each{val->
+						for(val in valueArray)
+						{
 							valList << castingRegistry.cast(val, componentType, componentGenericType)
 						}
 					}
@@ -824,7 +848,11 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 		// parse date structs automatically
 		def dateParams = [:]
 		def prefix = key + "_"
-		params.each{paramName, value->
+		//params.each{paramName, value->
+		for(pEntry in params)
+		{
+			def paramName = pEntry.key
+			def value = pEntry.value
 			if(paramName instanceof String && paramName.startsWith(prefix))
 			{
 				if(ObjectUtils.isListOrArray(value)){value = value[index]} //Get the correct value from an array or list, if applicable
@@ -849,7 +877,11 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 		def geoptParams = [:]
 		def prefix = key + "_"
 
-		params.each{paramName, value->
+		//params.each{paramName, value->
+		for(pEntry in params)
+		{
+			def paramName = pEntry.key
+			def value = pEntry.value
 			if(paramName instanceof String && paramName.startsWith(prefix))
 			{
 				if(ObjectUtils.isListOrArray(value)){value = value[index]} //Get the correct value from an array or list, if applicable

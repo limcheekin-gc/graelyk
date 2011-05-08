@@ -19,7 +19,7 @@ adminActions = ["deleteAll"]
 allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
 //Todo: Redirect if the user is not logged in. Do things with the user object
-  if(!user){redirect(users.createLoginURL(request.getRequestURI()))}
+//  if(!user){redirect(users.createLoginURL(request.getRequestURI()))}
 
 
 /*
@@ -36,6 +36,18 @@ Todo: Retrieve the user's locale preferences and set them. Otherwise they will b
 //userNumberLocale = new Locale("en", "US")
 //userCurrencyLocale = new Locale("en", "US")
 //userDateLocale = new Locale("en", "US")
+
+//Redirect if the user is not logged in. Do things with the user object
+if(!user && !allowedActions.contains(params.action))
+{
+	//TODO: Put the URL of your Sign-in page
+	redirect("/account/SignIn.gtpl")
+	return
+}
+
+userData = UserProfile.getUserOrCreate(user, getLocales())
+userLocale = userData?.language?.toLocale()
+wrapVariables(["userData", "userLocale"])
 
 index = {
 	list()

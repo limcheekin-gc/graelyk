@@ -1,0 +1,41 @@
+=======================
+Explicit Usage:
+=======================
+
+commons-codec-1.3.jar
+	groovyx.gaelyk.graelyk.codecs.Base64Codec.groovy
+
+commons-lang-2.4.jar
+	groovyx.gaelyk.graelyk.domain.ClassPropertyFetcher
+	groovyx.gaelyk.graelyk.domain.CurrencyEditor
+	groovyx.gaelyk.graelyk.domain.GraelykDomainClass
+	groovyx.gaelyk.graelyk.domain.GraelykDomainClassProperty
+	groovyx.gaelyk.graelyk.domain.GraelykDomainConfigurationUtil
+	groovyx.gaelyk.graelyk.domain.StructuredDateEditor
+	groovyx.gaelyk.graelyk.domain.TimeZoneEditor
+	groovyx.gaelyk.graelyk.taglyk.FormatTaglyk
+	groovyx.gaelyk.graelyk.taglyk.ValidationTaglyk
+	groovyx.gaelyk.graelyk.util.GraelykClassUtils
+	groovyx.gaelyk.graelyk.validation.AbstractConstraint
+	groovyx.gaelyk.graelyk.validation.BlankConstraint
+	groovyx.gaelyk.graelyk.validation.ConstrainedProperty
+	groovyx.gaelyk.graelyk.validation.EmailConstraint
+
+commons-validator-1.3.1.jar
+	groovyx.gaelyk.graelyk.validation.CreditCardConstraint
+	groovyx.gaelyk.graelyk.validation.EmailConstraint
+	
+javax.persistence.jar
+	groovyx.gaelyk.graelyk.domain.GraelykDomainClassProperty
+	groovyx.gaelyk.graelyk.domain.GraelykDomainConfigurationUtil
+	groovyx.gaelyk.graelyk.domain.GraelykLongIdDomainClass
+	groovyx.gaelyk.graelyk.domain.GraelykStringIdDomainClass
+
+org.springframework.beans-3.0.0.RELEASE.jar
+	groovyx.gaelyk.graelyk.validation.AbstractConstraint
+	...
+	groovyx.gaelyk.graelyk.validation.RangeConstraint
+
+=======================
+Runtime Usage:
+=======================

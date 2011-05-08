@@ -80,7 +80,9 @@ public class InListConstraint extends AbstractConstraint {
 		//Array of values (multiple select list) that each need to match the inList options
 		if(propertyValue instanceof Object[] || propertyValue instanceof Collection)
 		{
-			propertyValue.each{value->
+			//propertyValue.each{value->
+			for(value in propertyValue)
+			{
 				// Check that the list contains the given value. If not, add an error.
 				if (!list.contains(value)) {
 					Object[] args = [constraintPropertyName, constraintOwningClass, value, list] as Object[]

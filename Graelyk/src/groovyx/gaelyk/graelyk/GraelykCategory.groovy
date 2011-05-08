@@ -240,7 +240,11 @@ class GraelykCategory
 			{
 				script.request.variableWrapper = [:]
 			}
-			varMap.each{k,v->
+			//varMap.each{k,v->
+			for(kvEntry in varMap)
+			{
+				def k = kvEntry.key
+				def v = kvEntry.value
 				script.request.variableWrapper."$k" = v
 			}
 		}
@@ -254,7 +258,9 @@ class GraelykCategory
 			{
 				script.request.variableWrapper = [:]
 			}
-			varList.each{var->
+			//varList.each{var->
+			for(var in varList)
+			{
 				script.request.variableWrapper."$var" = script."$var"
 			}
 		}
@@ -266,7 +272,12 @@ class GraelykCategory
 		{
 			if(script.request.variableWrapper)
 			{
-				script.request.variableWrapper.each{k,v->
+				//script.request.variableWrapper.each{k,v->
+				def vw = script.request.variableWrapper
+				for(kvEntry in vw)
+				{
+					def k = kvEntry.key
+					def v = kvEntry.value
 					script."$k" = v
 				}
 			}
@@ -374,12 +385,22 @@ class GraelykCategory
 		//Get the locales specified in the query variable specified in graelyk.properties (graelyk.userLocale.query), and this will set a cookie if (graelyk.userLocale.cookie) exists
 		def appProperties = StaticResourceHolder.getAppProperties()
 		def queryName = appProperties["graelyk.userLocale.query"]
+		def qs = appProperties["graelyk.userLocale.cookieSeparator"]
+		def cs = appProperties["graelyk.userLocale.cookieSeparator"]
 		def userLocale
 		if(queryName)
 		{
 			userLocale = script.params[queryName]
 			if(userLocale)
 			{
+				//userLocale may be an array like ["eng", "prs,pes", "ara"], some of the list elements specifying multiple languages themselves. If so, make it a comma delimited String
+				if(userLocale instanceof List || userLocale instanceof String[])
+				{
+					userLocale = userLocale.join(cs)
+				}
+				//Now remove any remaining querySeparators and replace them with cookieSeparators
+				userLocale = userLocale.replaceAll(/${qs}/, cs)
+
 				//Set the cookie if a name for the cookie is in the graelyk.properties file
 				def cookieName = appProperties["graelyk.userLocale.cookie"]
 				if(cookieName)
@@ -390,7 +411,7 @@ class GraelykCategory
 					script.response.addCookie(cookie)
 				}
 				//Set the variable for this script
-				userLocale = userLocale.split(appProperties["graelyk.userLocale.cookieQuerySeparator"]).toList().collect{it.toLocale()}
+				userLocale = userLocale.split(cs).toList().collect{it.toLocale()}
 			}
 		}
 		//Get the locales specified in a cookie whose name is specified in graelyk.properties (graelyk.userLocale.cookie)
@@ -399,7 +420,7 @@ class GraelykCategory
 			userLocale = script.request.cookies.find{it.getName() == appProperties["graelyk.userLocale.cookie"]}
 			if(userLocale)
 			{
-				userLocale = userLocale.getValue().split(appProperties["graelyk.userLocale.cookieQuerySeparator"]).toList().collect{it.toLocale()}
+				userLocale = userLocale.getValue().split(appProperties["graelyk.userLocale.cookieSeparator"]).toList().collect{it.toLocale()}
 			}
 		}
 		return userLocale
@@ -561,7 +582,9 @@ class GraelykCategory
 	{
 		if(self == null){return null}
 		def list = []
-		self.each{locale->
+		//self.each{locale->
+		for(locale in self)
+		{
 			list << GraelykCategory.toLocale(locale)
 		}
 		return list
@@ -571,7 +594,9 @@ class GraelykCategory
 	{
 		if(self == null){return null}
 		def list = []
-		self.each{locale->
+		//self.each{locale->
+		for(locale in self)
+		{
 			list << GraelykCategory.toLocale(locale)
 		}
 		return list
