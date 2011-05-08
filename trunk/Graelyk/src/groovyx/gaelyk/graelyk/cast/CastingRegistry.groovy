@@ -293,7 +293,11 @@ class CastingRegistry extends HashMap<CastingSignature, Closure>
 			catch(Exception e)
 			{
 				def sb = new StringBuffer("")
-				this.each{sign, val->
+				//this.each{sign, val->
+				for(svEntry in this)
+				{
+					def sign = svEntry.key
+					def val = svEntry.val
 					sb << sign.toString() + "\r\n"
 				}
 				throw new IllegalArgumentException("No method of casting from $fromClass to $toClass" + (genericClass?"<$genericClass>":"") + " has been defined." +

@@ -419,6 +419,8 @@ class RenderTaglyk // implements com.opensymphony.module.sitemesh.RequestConstan
 	 * titleKey (optional*) - title key to use for the column, resolved against the message source
 	 * params (optional) - a map containing request parameters
 	 * action (optional) - the name of the action to use in the link, if not specified the list action will be linked
+	 * allowAsc (optionl) - default = true
+	 * allowDesc (optional) - default = true
 	 *
 	 * Attribute title or titleKey is required. When both attributes are specified then titleKey takes precedence,
 	 * resulting in the title caption to be resolved against the message source. In case when the message could
@@ -447,10 +449,17 @@ class RenderTaglyk // implements com.opensymphony.module.sitemesh.RequestConstan
 		}
 
 		def property = attrs.remove("property")
-		def action = attrs.action ? attrs.remove("action") : (script.actionName ?: "list")
+		//def action = attrs.action ? attrs.remove("action") : (script.actionName ?: "list")
+		def action = attrs.action ? attrs.remove("action") : "list"
 
 		def defaultOrder = attrs.remove("defaultOrder")
 		if(defaultOrder != "-") defaultOrder = ""
+			
+		def allowAsc = true
+		if(attrs.containsKey("allowAsc")){allowAsc = attrs.remove("allowAsc")}
+		
+		def allowDesc = true
+		if(attrs.containsKey("allowDesc")){allowAsc = attrs.remove("allowDesc")}
 
 		// current sorting property and order
 		def sort = script.params.sort ?: ""
@@ -460,10 +469,34 @@ class RenderTaglyk // implements com.opensymphony.module.sitemesh.RequestConstan
 			order = "-"
 			sort -= "-"
 		}
+		
+
+		// determine column title
+		def title = attrs.remove("title")
+		def titleKey = attrs.remove("titleKey")
+		if(titleKey) {
+			if(!title) title = titleKey
+			title = script.message(titleKey, [], title, script.userLocale)
+		}
+		
+		if(!allowAsc && !allowDesc)
+		{
+			//No sort. Just output the title.
+			writer << title
+			return writer.toString()
+		}
+		else if(allowAsc && !allowDesc)
+		{
+			order = ""
+		}
+		else if(allowDesc && !allowAsc)
+		{
+			order = "-"
+		}
 
 		// add sorting property and params to link params
 		def linkParams = [:]
-		if(script.params.id) linkParams.put("id",script.params.id)
+		//if(script.params.id) linkParams.put("id",script.params.id)
 		if(attrs.params) linkParams.putAll(attrs.remove("params"))
 		linkParams.sort = property
 
@@ -482,13 +515,6 @@ class RenderTaglyk // implements com.opensymphony.module.sitemesh.RequestConstan
 			linkParams.order = defaultOrder
 		}
 
-		// determine column title
-		def title = attrs.remove("title")
-		def titleKey = attrs.remove("titleKey")
-		if(titleKey) {
-			if(!title) title = titleKey
-			title = script.message(titleKey, [], title, script.userLocale)
-		}
 		
 		linkParams.sort = linkParams.order + linkParams.sort
 		linkParams.remove("order")

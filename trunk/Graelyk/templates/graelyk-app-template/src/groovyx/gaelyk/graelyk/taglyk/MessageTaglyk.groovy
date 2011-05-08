@@ -1,11 +1,14 @@
 package groovyx.gaelyk.graelyk.taglyk
 
 import groovyx.gaelyk.graelyk.util.StringUtils
+import groovyx.gaelyk.graelyk.StaticResourceHolder
 import org.springframework.context.MessageSourceResolvable
 import org.springframework.context.NoSuchMessageException
 
 class MessageTaglyk
 {
+	static appDefaultLocales = StaticResourceHolder.getAppProperties().appDefaultLocales
+	
 	//Methods that start with g_ print straight to script.out
 	//Methods that don't start with g_ return a String or some other object
 
@@ -18,7 +21,33 @@ class MessageTaglyk
 	static void g_message(script, String code, List args, defaultMessage){script.out << script.message(code, args, defaultMessage)}
 	static void g_message(script, String code, List args, defaultMessage, locale){script.out << script.message(code, args, defaultMessage, locale)}
 	
-	
+	static List joinLocaleLists(list1, list2)
+	{
+		def newList = []
+		if(!(list1 instanceof List))
+		{
+			list1 = [list1]
+		}
+		if(!(list2 instanceof List))
+		{
+			list2 = [list2]
+		}
+		for(item in list1)
+		{
+			if(!newList.contains(item))
+			{
+				newList << item
+			}
+		}
+		for(item in list2)
+		{
+			if(!newList.contains(item))
+			{
+				newList << item
+			}
+		}
+		return newList
+	}
 	
 	/*
 	static Locale resolveLocale(script, localeAttr=null)
@@ -138,7 +167,8 @@ class MessageTaglyk
 	
 	static String message(script, String code, List args, defaultMessage, locale)
 	{
-		def message = script.messageBundle.getMessage(code, locale, args)
+		def jointLocale = joinLocaleLists(locale, appDefaultLocales)
+		def message = script.messageBundle.getMessage(code, jointLocale, args)
 		
 		if(!message)
 		{
@@ -160,11 +190,13 @@ class MessageTaglyk
 	
 	static message(script, MessageSourceResolvable resolvable, Locale locale)
 	{
-		return script.messageBundle.getMessage(resolvable, locale)
+		def jointLocale = joinLocaleLists([locale], appDefaultLocales)
+		return script.messageBundle.getMessage(resolvable, jointLocale)
 	}
 	
 	static message(script, MessageSourceResolvable resolvable, List locales)
 	{
-		return script.messageBundle.getMessage(resolvable, locales)
+		def jointLocale = joinLocaleLists(locales, appDefaultLocales)
+		return script.messageBundle.getMessage(resolvable, jointLocale)
 	}
 }

@@ -34,7 +34,9 @@ public class MessageMap extends HashMap implements MessageSource
 		if(locales)
 		{
 			//separate locale list into an array of locales, loop over each locale
-			locales.each{loc->
+			//locales.each{loc->
+			for(loc in locales)
+			{
 				//split this locale (loc) into parts divided by underscore, loop over parts, joining them back together
 				def locParts = loc.toString().split("_").toList()
 				def currentLocale = ""
@@ -123,14 +125,23 @@ public class MessageMap extends HashMap implements MessageSource
 	//to the current MessageMap, except where the key already exists in this MessageMap.
 	public void addMessages(MessageMap msgMapToAdd)
 	{
-		msgMapToAdd.each{key, value->
+		//msgMapToAdd.each{key, value->
+		for(kvEntry in msgMapToAdd)
+		{
+			def key = kvEntry.key
+			def value = kvEntry.value
 			if(!this.containsKey(key))
 			{
 				this[key] = value
 			}
 		}
 		
-		msgMapToAdd.getLoadedFiles().each{key, value->
+		//msgMapToAdd.getLoadedFiles().each{key, value->
+		def lf = msgMapToAdd.getLoadedFiles()
+		for(kvEntry in lf)
+		{
+			def key = kvEntry.key
+			def value = kvEntry.value
 			if(!this.getLoadedFiles().containsKey(key))
 			{
 				this.getLoadedFiles()[key] = value

@@ -821,7 +821,11 @@ class FormTaglyk {
         // create options from list
         if (from) 
 		{
-            from.eachWithIndex {el, i ->
+            //from.eachWithIndex {el, i ->
+        	def i = -1
+        	for(el in from)
+        	{
+        		i++
                 def keyValue = null
                 
                 if(widget == "select")
@@ -1052,7 +1056,11 @@ class FormTaglyk {
         def values = attrs.remove('values')
         def labels = attrs.remove('labels')
         def name = attrs.remove('name')
-        values.eachWithIndex {val, idx ->
+        //values.eachWithIndex {val, idx ->
+        def idx = -1
+        for(val in values)
+        {
+        	idx++
             def it = new Expando();
             it.radio = "<input type=\"radio\" name=\"${name}\" "
             if (value?.toString().equals(val.toString())) {

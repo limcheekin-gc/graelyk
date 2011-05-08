@@ -125,7 +125,11 @@ class FileUpload
 	//multi-valued fields are returned as arrays in Groovlets (see groovy.servlet.ServletBinding)
 	static void convertLists(Map params)
 	{
-		params.each{key, value->
+		//params.each{key, value->
+		for(kvEntry in params)
+		{
+			def key = kvEntry.key
+			def value = kvEntry.value
 			if(value instanceof List)
 			{
 				params[key] = value as Object[]

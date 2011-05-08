@@ -256,7 +256,11 @@ class ApplicationTaglyk
 		
 		//params["action"] = action
 		def queryParams = []
-		params.each{k,v->
+		//params.each{k,v->
+		for(kvEntry in params)
+		{
+			def k = kvEntry.key
+			def v = kvEntry.value
 			queryParams << URLEncoder.encode(k.toString(), encoding) + "=" + URLEncoder.encode(v.toString(), encoding)
 		}
 		def query = queryParams.join("&")
@@ -278,7 +282,11 @@ class ApplicationTaglyk
 		def writer = new StringBuffer()
 		writer << "<${attrs.name}"
 		if(attrs.attrs) {
-			attrs.attrs.each{ k,v ->
+			//attrs.attrs.each{ k,v ->
+			for(kvEntry in attrs.attrs)
+			{
+				def k = kvEntry.key
+				def v = kvEntry.value
 				if(v) {
 					if(v instanceof Closure) {
 						writer << " $k=\""

@@ -469,7 +469,11 @@ class FormatTaglyk
 		}
 		
 		def collection = []
-		values.eachWithIndex{val, index->
+		//values.eachWithIndex{val, index->
+		def index = -1
+		for(val in values)
+		{
+			index++
 			def name = ""
 			def size = ""
 			def type = ""
@@ -511,11 +515,11 @@ class FormatTaglyk
 			def downloadURL = ""
 			if(val instanceof BlobKey)
 			{
-				downloadURL = "${appProperties['graelyk.download.blobstore.url']}?key=${key}&field=${field}${queryIndex}"
+				downloadURL = "\${appProperties['graelyk.download.blobstore.url']}?key=${key}&field=${field}${queryIndex}"
 			}
 			else
 			{
-				downloadURL = "${appProperties['graelyk.download.datastore.url']}?key=${key}&field=${field}${queryIndex}"
+				downloadURL = "\${appProperties['graelyk.download.datastore.url']}?key=${key}&field=${field}${queryIndex}"
 			}
 			
 			if(showImage && isImage)
