@@ -3,6 +3,8 @@ target("build-app":"Builds the app so it is ready to be hosted on App Engine")
 	checkGraelyk()
 
 	webinf = "war/WEB-INF"
+	classesDir = "war/WEB-INF/classes"
+	jarPath = "war/WEB-INF/lib/" + new File(baseDir).name + ".jar"
 
     gaeHome = System.getenv("APPENGINE_HOME")
     if(!gaeHome)
@@ -26,4 +28,8 @@ target("build-app":"Builds the app so it is ready to be hosted on App Engine")
 		}
 		javac source: "1.5", target: "1.5", debug: "on"
 	}
+	
+	jar(basedir: classesDir, destfile: jarPath)
+	delete(dir: classesDir) //clear the directory so these files will not also be uploaded (in addition to the jar file)
+	mkdir(dir: classesDir) //remake the directory for use next time
 }
