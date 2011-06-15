@@ -31,8 +31,21 @@ class ISO639_3Taglyk
     		defaultName = LanguageByCode.get(locale.getLanguage())?.name
     	}
     	def localName = script.message(code:"lang." + locale.getLanguage(), default:defaultName)
+		if(localName =~ /\t/){localName = localName.replaceAll(/\t.*$/, "")}
 		return localName
     }
+	
+    static String localizeLanguageNameWithForeignName(script, Locale locale)
+    {
+    	def defaultName = ELanguagesByCountry.getPrimaryLanguage(locale.getCountry(), locale.getLanguage())?.name
+    	if(!defaultName)
+    	{
+    		defaultName = LanguageByCode.get(locale.getLanguage())?.name
+    	}
+    	def localName = script.message(code:"lang." + locale.getLanguage(), default:defaultName)
+		return localName
+    }
+	
     static String localizeCountryName(script, Locale locale)
     {
     	def defaultName = locale.getDisplayCountry()
@@ -137,7 +150,7 @@ class ISO639_3Taglyk
 		if(attrs.containsKey("showCode")){showCode = attrs.remove("showCode")}
 		
 		// set the variant (i.e. language name) as a closure that gets the language name
-		def localeVariant = {((it.variant && it.variant != "null") ? it.variant : (it.country ? ELanguagesByCountry.getPrimaryLanguage(it.country, it.language)?.getName() : LanguageByCode.get(it.language)?.getName()))}
+		def localeVariant = {def variantName = ((it.variant && it.variant != "null") ? it.variant : (it.country ? ELanguagesByCountry.getPrimaryLanguage(it.country, it.language)?.getName() : LanguageByCode.get(it.language)?.getName())); return script.message(code:"lang." + it.language, default:variantName);}
 		// set the key as a closure that formats the locale
 		def localeKey = {def key = it.language + "_" + (appendCountryCode ? it.country : "") + "_" + (appendLanguageName ? localeVariant.call(it) : ""); return key.replaceAll(/__$/, "")}
 		// set the option value as a closure that formats the locale for display
@@ -182,7 +195,7 @@ class ISO639_3Taglyk
 		
 		script.wrapVariables(["languagePickerAttributes"])
 		script.include("/WEB-INF/includes/LanguagePicker.gtpl")
-		out << script.request.includeReturn
+		out << script.request.getAttribute("includeReturn")
 		
 		return out.toString()
     }

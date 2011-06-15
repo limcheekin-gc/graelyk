@@ -329,7 +329,8 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
                 this.relationshipMap = new HashMap();
 
             Class theClass = getClazz();
-            while(theClass != Object.class) {
+            while(theClass != Object.class)
+            {
                 theClass = theClass.getSuperclass();
                 ClassPropertyFetcher propertyFetcher = ClassPropertyFetcher.forClass(theClass);
                 Map superRelationshipMap = propertyFetcher.getStaticPropertyValue(GraelykDomainClassProperty.HAS_MANY, Map.class);
