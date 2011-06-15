@@ -73,7 +73,7 @@ class GraelykCategory
 			defaultValue("userCurrencyLocale", null)
 			
 			//Set the admin variable based on whether the current users is an Administrator
-			admin = (user && users.isUserAdmin())
+			admin = (user && users.isUserLoggedIn() && users.isUserAdmin())
 			
 			//Even if there is an "action" param, look for a param like "_action_edit", "_action_delete" and extract the action name ("edit", "delete")
 			actionName = (params.find{it.key.startsWith("_action_")})?.key?.minus("_action_")
@@ -192,7 +192,7 @@ class GraelykCategory
 				"il8nPrefix", "viewPath", "view", 
 				"controllerDefaultAction", "allowedActions", "adminActions", "userActions", "allowedMethods", "adminMethods", "userActions",
 				"appProperties", "messageBundle", "resources",
-				"admin", "flash",
+				"user", "admin", "flash",
 				"userLocale", "userNumberLocale", "userCurrencyLocale", "userDateLocale", "castingRegistry",
 				"processedController"]
 			wrapVariables(varsToWrap)
