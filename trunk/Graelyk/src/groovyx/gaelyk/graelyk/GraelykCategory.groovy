@@ -51,6 +51,8 @@ class GraelykCategory
 
 	static void processController(Object script, boolean forwardToView, Closure defaultAction)
 	{
+		System.out.println("Script? " + script ? "true" : "false")
+		System.out.println("Script.request? " + script?.request ? "true" : "false")
 		script.identity{
 			//Set default values for various properties in case they were not set in the controller
 			processedController = true
@@ -259,9 +261,14 @@ class GraelykCategory
 				script.request.variableWrapper = [:]
 			}
 			//varList.each{var->
-			for(var in varList)
+			System.out.println("varList: " + varList)
+			if(varList)
 			{
-				script.request.variableWrapper."$var" = script."$var"
+				for(var in varList)
+				{
+					System.out.print("wrap: " + var + "...")
+					script.request.variableWrapper."$var" = script."$var"
+				}
 			}
 		}
 	}
@@ -417,7 +424,10 @@ class GraelykCategory
 		//Get the locales specified in a cookie whose name is specified in graelyk.properties (graelyk.userLocale.cookie)
 		if(!userLocale)
 		{
-			userLocale = script.request.cookies.find{it.getName() == appProperties["graelyk.userLocale.cookie"]}
+			def request = script.request
+			def cookies = request?.cookies
+			userLocale = cookies?.find{it.getName() == appProperties["graelyk.userLocale.cookie"]}
+			//userLocale = script.request.cookies.find{it.getName() == appProperties["graelyk.userLocale.cookie"]}
 			if(userLocale)
 			{
 				userLocale = userLocale.getValue().split(appProperties["graelyk.userLocale.cookieSeparator"]).toList().collect{it.toLocale()}

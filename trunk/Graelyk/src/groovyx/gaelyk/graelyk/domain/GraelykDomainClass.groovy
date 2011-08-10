@@ -268,7 +268,7 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 		return valid
 	}
 	
-	private void establishValidator()
+	def void establishValidator()
 	{
 		//This method tries to retrieve a validator cached in the StaticResourceHolder.
 		//If one doesn't exist yet, it creates one. The idea is to cut down on initialization
@@ -287,7 +287,7 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 		this.validator = v
 	}
 	
-	private void establishProperties()
+	def void establishProperties()
 	{
 		def props = this.getMetaPropertyValues()
 		//props.each{p->
@@ -309,7 +309,7 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 		}
 	}
 	
-	private void establishPersistentProperties()
+	def void establishPersistentProperties()
 	{
         for (GraelykDomainClassProperty currentProp in this.propertyMap.values())
 		{
@@ -320,7 +320,7 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
         }
 	}
 	
-    private Map establishAssociationMap()
+    def Map establishAssociationMap()
 	{
         if(this.relationshipMap == null || this.relationshipMap == [:]) 
 		{
@@ -344,7 +344,7 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 	/**
 	 * Evaluates the belongsTo property to find out who owns who
 	 */
-	private void establishRelationshipOwners()
+	def void establishRelationshipOwners()
 	{
 		Class belongsTo = classPropertyFetcher.getStaticPropertyValue(GraelykDomainClassProperty.BELONGS_TO, Class.class);
         if(belongsTo == null) {
@@ -519,7 +519,7 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 		return unmodifiableMap(this.@constrainedProperties)
 	}
 	
-	private void initializeConstraints()
+	def void initializeConstraints()
 	{
 		//Convert the constraints closure into a Map
 		def Map constrainedProps
@@ -623,7 +623,7 @@ abstract class GraelykDomainClass extends Obgaektifiable implements Serializable
 	}
 
 	
-	private void establishCastingRegistry()
+	def void establishCastingRegistry()
 	{
 		if(callingScript != null)
 		{

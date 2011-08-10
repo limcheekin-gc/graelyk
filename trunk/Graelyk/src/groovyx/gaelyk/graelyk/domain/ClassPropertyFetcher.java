@@ -38,13 +38,13 @@ import groovyx.gaelyk.graelyk.util.GraelykClassUtils;
  * 
  */
 public class ClassPropertyFetcher {
-	private final Class clazz;
+	/*private*/ final Class clazz;
 	final Map<String, PropertyFetcher> staticFetchers = new HashMap<String, PropertyFetcher>();
 	final Map<String, PropertyFetcher> instanceFetchers = new HashMap<String, PropertyFetcher>();
-	private final ReferenceInstanceCallback callback;
-	private PropertyDescriptor[] propertyDescriptors;
+	/*private*/ final ReferenceInstanceCallback callback;
+	/*private*/ PropertyDescriptor[] propertyDescriptors;
 
-	private static Map<Class, ClassPropertyFetcher> cachedClassPropertyFetchers = new ConcurrentHashMap<Class, ClassPropertyFetcher>();
+	/*private*/ static Map<Class, ClassPropertyFetcher> cachedClassPropertyFetchers = new ConcurrentHashMap<Class, ClassPropertyFetcher>();
 
 	public static void clearClassPropertyFetcherCache() {
 		cachedClassPropertyFetchers.clear();
@@ -60,7 +60,7 @@ public class ClassPropertyFetcher {
 		if (cpf == null) {
 			if (callback == null) {
 				callback = new ReferenceInstanceCallback() {
-					private Object o;
+					/*private*/ Object o;
 
 					public Object getReferenceInstance() {
 						if (o == null)
@@ -96,7 +96,7 @@ public class ClassPropertyFetcher {
 				instanceFetchers.containsKey(name);
 	}
 
-	private void init() {
+	void init() {
 		FieldCallback fieldCallback = new ReflectionUtils.FieldCallback() {
 			public void doWith(Field field) {
 				if (field.isSynthetic())
@@ -195,7 +195,7 @@ public class ClassPropertyFetcher {
 		}
 	}
 
-	private List<Class> resolveAllClasses(Class c) {
+	List<Class> resolveAllClasses(Class c) {
 		List<Class> list = new ArrayList<Class>();
 		Class currentClass = c;
 		while (currentClass != null) {
@@ -215,7 +215,7 @@ public class ClassPropertyFetcher {
 		return getPropertyValueWithFetcher(name, fetcher);
 	}
 
-	private Object getPropertyValueWithFetcher(String name, PropertyFetcher fetcher) {
+	Object getPropertyValueWithFetcher(String name, PropertyFetcher fetcher) {
 		if (fetcher != null) {
 			try {
 				return fetcher.get(callback);
@@ -239,7 +239,7 @@ public class ClassPropertyFetcher {
 		return returnOnlyIfInstanceOf(getPropertyValue(name, false), c);
 	}
 	
-	private <T> T returnOnlyIfInstanceOf(Object value, Class<T> type) {
+	<T> T returnOnlyIfInstanceOf(Object value, Class<T> type) {
 		if ((value != null) && (type==Object.class || GraelykClassUtils.isGroovyAssignableFrom( type, value.getClass()))) {
             return (T)value;
         } else {
@@ -248,7 +248,7 @@ public class ClassPropertyFetcher {
 	}
 	
 
-	private PropertyFetcher resolveFetcher(String name,
+	PropertyFetcher resolveFetcher(String name,
 			boolean onlyInstanceProperties) {
 		PropertyFetcher fetcher = null;
 		if (!onlyInstanceProperties) {
@@ -285,8 +285,8 @@ public class ClassPropertyFetcher {
 	}
 
 	static class GetterPropertyFetcher implements PropertyFetcher {
-		private final Method readMethod;
-		private final boolean staticMethod;
+		/*private*/ final Method readMethod;
+		/*private*/ final boolean staticMethod;
 
 		GetterPropertyFetcher(Method readMethod, boolean staticMethod) {
 			this.readMethod = readMethod;
@@ -315,8 +315,8 @@ public class ClassPropertyFetcher {
 	}
 
 	static class FieldReaderFetcher implements PropertyFetcher {
-		private final Field field;
-		private final boolean staticField;
+		/*private*/ final Field field;
+		/*private*/ final boolean staticField;
 
 		public FieldReaderFetcher(Field field, boolean staticField) {
 			this.field = field;
